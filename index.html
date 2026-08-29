@@ -94,36 +94,56 @@
     padding: 28px 18px 60px;
   }
 
-  header.top {
-    margin-bottom: 22px;
+  /* On phones, give the content more of the actual screen width instead of
+     the same desktop-sized side margins -- this is also what leaves enough
+     room for names/pills/amounts to sit on one line inside the table. */
+  @media (max-width: 480px) {
+    .page { padding: 16px 10px 40px; }
+    .card { padding: 12px; }
   }
 
+  header.top {
+    margin-bottom: 18px;
+  }
+
+  /* Admin/settings icons pinned to the very top-start corner (top-left on
+     screen, since the page is RTL so "start" of a row is the right edge and
+     the buttons sit as the row's LAST item) on their own row, separate from
+     the title -- they used to share a row with the big h1 title, which on
+     narrow phones squeezed the title into an unreadable one-word-per-line
+     wrap. The building name + due date now live together on the row below,
+     and the h1 gets a full row entirely to itself. */
   .top-row {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 10px;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
   }
 
   .top-actions {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex: none;
-    padding-top: 2px;
+  }
+
+  .eyebrow-line {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin-top: 8px;
   }
 
   .common-due {
     font-size: 0.78rem;
-    color: var(--ink-muted);
-    white-space: nowrap;
+    font-weight: 800;
+    color: var(--danger);
   }
 
   header.top .eyebrow {
     font-size: 0.78rem;
     color: var(--ink-muted);
     letter-spacing: 0.02em;
-    margin-bottom: 4px;
   }
 
   header.top h1 {
@@ -140,7 +160,11 @@
     font-size: 0.94rem;
     max-width: 46ch;
   }
-  .page.dash-mode header.top p.sub { display: none; }
+  /* Both tabs now set and show their own header description via
+     updateHeaderForTab() -- this used to force-hide it on the dash tab
+     back when that tab had a separate description elsewhere; no longer
+     needed, and removing it (rather than leaving dead+wrong CSS) avoids
+     the dash tab's header silently losing its description line. */
 
   .card {
     background: var(--surface);
@@ -214,7 +238,7 @@
     gap: 6px;
   }
 
-  .stub input[type="number"], .stub .amount-display {
+  .stub input[type="number"] {
     width: 100%;
     border: none;
     background: transparent;
@@ -225,6 +249,21 @@
     padding: 2px 0;
   }
   .stub input[type="number"]:focus { outline: none; }
+  /* .amount-display is now a <span>, not an <input> -- it's a flex item
+     inside .amount-row alongside .unit ("ريال"), so it must NOT claim 100%
+     width (that pushed the unit onto its own line, wrapping the currency
+     word away from the number). Content-sized instead, so both sit on one
+     line as intended. */
+  .stub .amount-display {
+    border: none;
+    background: transparent;
+    font-family: 'Cairo', Tahoma, sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--ink);
+    padding: 2px 0;
+    white-space: nowrap;
+  }
   .stub .unit { color: var(--ink-muted); font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
   .stub .amount-display.empty { color: var(--ink-muted); font-size: 1.3rem; font-weight: 700; }
 
@@ -320,16 +359,16 @@
     background: var(--surface-2);
     color: var(--ink-muted);
     font-weight: 700;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     text-align: right;
-    padding: 14px 14px;
+    padding: 10px 10px;
     border-bottom: 1px solid var(--line-strong);
     white-space: nowrap;
   }
   thead th.num { text-align: left; }
 
   tbody td {
-    padding: 9px 10px;
+    padding: 8px 8px;
     border-bottom: 1px solid var(--line);
     vertical-align: middle;
   }
@@ -339,21 +378,30 @@
   .apt-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     font-weight: 700;
     font-size: 1rem;
+    min-width: 0;
+  }
+  /* Never wrap a neighbor's name to a second line -- the other two columns
+     (floor pill, due chip) are kept compact specifically so there's always
+     room for this on one line. */
+  .apt-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .apt-num {
     flex: none;
-    min-width: 30px;
-    height: 30px;
-    padding: 0 5px;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 4px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 800;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     background: var(--surface-2);
   }
   .apt-num.ground { background: var(--ground-tint); color: var(--ground-pill); }
@@ -361,23 +409,26 @@
 
   .floor-pill {
     display: inline-block;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-weight: 700;
-    padding: 3px 11px;
+    padding: 3px 8px;
     border-radius: 999px;
+    white-space: nowrap;
   }
   .floor-pill.ground { background: var(--ground-tint); color: var(--ground-pill); }
   .floor-pill.up { background: var(--up-tint); color: var(--up-pill); }
 
-  /* Normal on-screen sizing above; export-mode restores the larger,
-     WhatsApp-legible sizing used only while rendering the saved photo. */
-  .export-mode table { font-size: 1.28rem; min-width: 480px; }
-  .export-mode tbody td { padding: 14px 14px; }
-  .export-mode .apt-cell { font-size: 1.85rem; gap: 10px; }
-  .export-mode .apt-num { min-width: 42px; height: 42px; font-size: 1.15rem; }
-  .export-mode .floor-pill { font-size: 1.6rem; padding: 4px 16px; }
-  .export-mode td.due-cell .chip { font-size: 1.85rem; padding: 8px 18px; }
-  .export-mode tr.totals td { font-size: 1.4rem; padding-top: 16px; padding-bottom: 16px; }
+  /* Normal on-screen sizing above; export-mode enlarges it a bit for
+     WhatsApp legibility when rendering the saved photo -- kept moderate
+     (not the much larger sizing used before) so the exported table stays
+     compact/uniform rather than tall and sprawling. */
+  .export-mode table { font-size: 1.05rem; min-width: 420px; }
+  .export-mode tbody td { padding: 10px 10px; }
+  .export-mode .apt-cell { font-size: 1.3rem; gap: 8px; }
+  .export-mode .apt-num { min-width: 34px; height: 34px; font-size: 0.95rem; }
+  .export-mode .floor-pill { font-size: 1rem; padding: 3px 10px; }
+  .export-mode td.due-cell .chip { font-size: 1.3rem; padding: 6px 14px; }
+  .export-mode tr.totals td { font-size: 1.1rem; padding-top: 10px; padding-bottom: 10px; }
 
   td.due-cell {
     font-weight: 800;
@@ -560,7 +611,6 @@
   .dash-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
   .dash-head h2 { margin:0; font-size:1.05rem; }
   .dash-head .dash-sub { font-size:0.66rem; color:var(--ink-muted); font-weight:600; margin-top:1px; }
-  .dash-head .dash-due { font-size:0.66rem; color:var(--water); font-weight:700; margin-top:2px; }
   .sync-status { font-size:0.6rem; font-weight:700; margin-top:2px; }
   .sync-status.ok { color: var(--up-pill); }
   .sync-status.warn { color: var(--danger); }
@@ -650,16 +700,16 @@
 
   <header class="top">
     <div class="top-row">
-      <div>
-        <div class="eyebrow">الزهور 14-2 · حساب مشترك</div>
-        <h1>قسمة فواتير المبنى</h1>
-      </div>
       <div class="top-actions">
-        <div class="dash-due" id="dashDue">&mdash;</div>
         <button id="adminSettingsBtn" class="lock-btn hidden-view" type="button" title="إعدادات المشرف">⚙️</button>
         <button id="adminLockBtn" class="lock-btn" type="button" title="دخول المشرف">🔒</button>
       </div>
     </div>
+    <div class="eyebrow-line">
+      <span class="eyebrow">الزهور 14-2 · حساب مشترك</span>
+      <span class="common-due" id="dashDue">&mdash;</span>
+    </div>
+    <h1>قسمة فواتير المبنى</h1>
     <p class="sub">نصيب كل شقة من فاتورتَي المياه والكهرباء المسجَّلتين لهذا الشهر — جدول جاهز للمشاركة.</p>
   </header>
 
@@ -697,6 +747,7 @@
       </div>
     </div>
     <input type="hidden" id="flatRate" value="200" />
+    <div class="month-bill-info" id="billsPhotoInfo"></div>
     <div class="note" id="billsRecordNote" style="display:none;"></div>
     <button class="calc" id="billsRecordBtn" type="button" style="display:none; margin-top:10px;">🧾 تسجيل / تعديل فاتورة هذا الشهر</button>
   </section>
@@ -732,7 +783,7 @@
     </div>
   </section>
 
-  <button class="calc" id="savePhotoBtn" type="button" style="margin-top:14px;">📷 حفظ صورة الفاتورة</button>
+  <button class="calc" id="savePhotoBtn" type="button" style="margin-top:14px;">📤 حفظ/مشاركة صورة جدول القسمة</button>
   <div class="note" id="savePhotoStatus" style="text-align:center;"></div>
 
   </div>
@@ -770,10 +821,15 @@
       <div id="spendLog" class="ledger-body hidden-view"></div>
     </section>
     <script type="application/json" id="fundStateData"></script>
+  </div>
 
-    <div class="modal-overlay hidden-view" id="modalOverlay">
-      <div class="modal-box" id="modalBox"></div>
-    </div>
+  <!-- Lives outside both tab views (each tab view is display:none when
+       inactive) so the admin settings modal can open regardless of which
+       tab is currently showing -- it used to be nested inside #dashboardView,
+       which meant it was silently hidden along with that view while browsing
+       the bills tab. -->
+  <div class="modal-overlay hidden-view" id="modalOverlay">
+    <div class="modal-box" id="modalBox"></div>
   </div>
 
 </div>
@@ -874,6 +930,7 @@
     var waterEl = document.getElementById('waterTotal');
     var elecEl = document.getElementById('elecTotal');
     var recordNote = document.getElementById('billsRecordNote');
+    var photoInfoEl = document.getElementById('billsPhotoInfo');
 
     if (!bill) {
       if (waterEl) { waterEl.textContent = '—'; waterEl.classList.add('empty'); }
@@ -881,6 +938,7 @@
       var rb = document.getElementById('resultBody'); if (rb) rb.innerHTML = '';
       var tb = document.getElementById('totalsBody'); if (tb) tb.innerHTML = '';
       var rn = document.getElementById('roundingNote'); if (rn) rn.innerHTML = '';
+      if (photoInfoEl) photoInfoEl.innerHTML = '';
       if (recordNote) {
         recordNote.style.display = 'block';
         recordNote.textContent = window.__fundUnlocked
@@ -890,6 +948,28 @@
       return;
     }
     if (recordNote) recordNote.style.display = 'none';
+
+    // The photo the admin attached when recording THIS bill (the actual
+    // water/electricity company bill, not the generated split table below)
+    // -- this is the feature adnan asked for directly on this tab, distinct
+    // from the "save table as image" button further down the page.
+    if (photoInfoEl) {
+      photoInfoEl.innerHTML = '';
+      if (bill.photoUrl) {
+        var photoLink = document.createElement('a');
+        photoLink.href = bill.photoUrl;
+        photoLink.target = '_blank';
+        photoLink.rel = 'noopener';
+        photoLink.className = 'bill-photo-link';
+        photoLink.textContent = '📎 عرض صورة الفاتورة الأصلية';
+        photoInfoEl.appendChild(photoLink);
+      } else if (window.__fundUnlocked) {
+        var noPhotoBills = document.createElement('span');
+        noPhotoBills.className = 'bill-photo-missing';
+        noPhotoBills.textContent = 'لا توجد صورة مرفقة لهذا الشهر (أضِفها من زر التسجيل أدناه)';
+        photoInfoEl.appendChild(noPhotoBills);
+      }
+    }
 
     var waterTotal = parseFloat(bill.water) || 0;
     var elecTotal = parseFloat(bill.elec) || 0;
@@ -947,7 +1027,7 @@
       var tr = document.createElement('tr');
       var label = r.name ? r.name : ('شقة رقم ' + r.apt);
       tr.innerHTML =
-        '<td><span class="apt-cell"><span class="apt-num ' + (r.ground ? 'ground' : 'up') + '">' + r.apt + '</span>' + label + '</span></td>' +
+        '<td><span class="apt-cell"><span class="apt-num ' + (r.ground ? 'ground' : 'up') + '">' + r.apt + '</span><span class="apt-name">' + label + '</span></span></td>' +
         '<td><span class="floor-pill ' + (r.ground ? 'ground' : 'up') + '">' + (r.ground ? 'أرضي' : 'علوي') + '</span></td>' +
         '<td class="num due-cell"><span class="chip">' + fmtDue(r.due) + '</span></td>';
       body.appendChild(tr);
@@ -1953,7 +2033,7 @@
   // tabs shared one header -- so switching to صندوق العمارة still showed the
   // bills-tab title. Each tab now sets its own title/description when it
   // becomes active.
-  var headerH1 = document.querySelector('.top-row h1');
+  var headerH1 = document.querySelector('header.top h1');
   var headerSub = document.querySelector('header.top .sub');
   var TAB_HEADERS = {
     bills: { title: 'قسمة فواتير المبنى', sub: 'نصيب كل شقة من فاتورتَي المياه والكهرباء المسجَّلتين لهذا الشهر — جدول جاهز للمشاركة.' },
