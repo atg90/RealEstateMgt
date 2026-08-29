@@ -448,6 +448,26 @@
   .export-mode .table-scroll { overflow: visible; }
   .export-mode tr.totals td { font-size: 1.1rem; padding-top: 10px; padding-bottom: 10px; }
 
+  /* adnan wants the exported/shared photo to look like the real on-screen
+     "فواتير هذا الشهر" card (month badge + the two colored water/electric
+     boxes) stacked above the results table, exactly as it already renders
+     on screen -- not a separate invented summary line. So #exportCapture
+     wraps BOTH cards and that whole wrapper is what gets captured; here we
+     just hide the controls that don't belong in a static shared photo
+     (month prev/next nav, the original-photo link, admin-only notes/attach
+     button) while export-mode is active. */
+  .export-mode #billsMonthNav,
+  .export-mode #billsPhotoInfo,
+  .export-mode #billsRecordNote,
+  .export-mode #billsAttachPhotoBtn {
+    display: none !important;
+  }
+  #exportCapture.export-mode {
+    background: var(--bg);
+    padding: 4px;
+  }
+  .export-mode .card + .card { margin-top: 14px !important; }
+
   td.due-cell {
     font-weight: 800;
   }
@@ -738,6 +758,8 @@
 
   <div id="billsView">
 
+  <div id="exportCapture">
+
   <section class="card">
     <div class="card-title-row">
       <h2>فواتير هذا الشهر</h2>
@@ -803,6 +825,8 @@
       </div>
     </div>
   </section>
+
+  </div>
 
   <button class="calc" id="savePhotoBtn" type="button" style="margin-top:14px;">📤 حفظ/مشاركة صورة جدول القسمة</button>
   <div class="note" id="savePhotoStatus" style="text-align:center;"></div>
@@ -998,6 +1022,7 @@
     var elecTotal = parseFloat(bill.elec) || 0;
     if (waterEl) { waterEl.textContent = fmt(waterTotal); waterEl.classList.remove('empty'); }
     if (elecEl) { elecEl.textContent = fmt(elecTotal); elecEl.classList.remove('empty'); }
+
     var flatRate = parseFloat(document.getElementById('flatRate').value) || 0;
 
     // Every apartment pays the SAME water halalas, and every apartment within
@@ -1128,7 +1153,12 @@
   var savePhotoBtn = document.getElementById('savePhotoBtn');
   if (savePhotoBtn) {
     savePhotoBtn.addEventListener('click', function () {
-      var card = document.getElementById('resultTable') && document.getElementById('resultTable').closest('.card');
+      // Capture the WHOLE bills tab (the "فواتير هذا الشهر" card with the
+      // month badge + colored water/electric boxes, together with the
+      // results-table card below it) so the exported/shared photo is
+      // self-contained: which month it's for and what the two bills came
+      // to, without needing the rest of the page for context.
+      var card = document.getElementById('exportCapture');
       var status = document.getElementById('savePhotoStatus');
       if (!card || typeof html2canvas !== 'function') {
         if (status) status.textContent = 'تعذّر إنشاء الصورة (فشل تحميل أداة التصوير) — تأكد من الاتصال بالإنترنت وحاول مرة أخرى';
