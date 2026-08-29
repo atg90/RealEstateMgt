@@ -323,6 +323,11 @@
   }
   button.calc:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
   button.calc:active { opacity: 0.85; }
+  button.calc.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+  }
 
   .legend {
     display: flex;
@@ -422,12 +427,25 @@
      WhatsApp legibility when rendering the saved photo -- kept moderate
      (not the much larger sizing used before) so the exported table stays
      compact/uniform rather than tall and sprawling. */
-  .export-mode table { font-size: 1.05rem; min-width: 420px; }
-  .export-mode tbody td { padding: 10px 10px; }
-  .export-mode .apt-cell { font-size: 1.3rem; gap: 8px; }
-  .export-mode .apt-num { min-width: 34px; height: 34px; font-size: 0.95rem; }
-  .export-mode .floor-pill { font-size: 1rem; padding: 3px 10px; }
-  .export-mode td.due-cell .chip { font-size: 1.3rem; padding: 6px 14px; }
+  /* No forced min-width here on purpose: .table-scroll (the table's parent)
+     is a horizontally-scrolling container, and html2canvas -- the library
+     that renders the "save as photo" export -- does not capture content
+     that's scrolled out of view. A min-width wider than the phone screen
+     used to push the due-amount column off-screen inside that scroll area,
+     so it was silently missing from every exported photo. Letting the
+     table stay width:100% (same as normal mode) keeps everything within
+     the visible/captured area. */
+  .export-mode table { font-size: 0.92rem; }
+  .export-mode tbody td { padding: 7px 6px; }
+  .export-mode .apt-cell { font-size: 1.1rem; gap: 5px; }
+  .export-mode .apt-num { min-width: 28px; height: 28px; font-size: 0.82rem; }
+  .export-mode .floor-pill { font-size: 0.88rem; padding: 3px 7px; }
+  .export-mode td.due-cell .chip { font-size: 1.1rem; padding: 4px 9px; }
+  /* Safety net: even after the sizing above, don't let .table-scroll's own
+     overflow:auto (meant for on-screen touch-scrolling) clip anything
+     during export -- html2canvas cannot capture content that requires
+     scrolling to see. */
+  .export-mode .table-scroll { overflow: visible; }
   .export-mode tr.totals td { font-size: 1.1rem; padding-top: 10px; padding-bottom: 10px; }
 
   td.due-cell {
@@ -749,7 +767,10 @@
     <input type="hidden" id="flatRate" value="200" />
     <div class="month-bill-info" id="billsPhotoInfo"></div>
     <div class="note" id="billsRecordNote" style="display:none;"></div>
-    <button class="calc" id="billsRecordBtn" type="button" style="display:none; margin-top:10px;">🧾 تسجيل / تعديل فاتورة هذا الشهر</button>
+    <!-- Photo only -- no water/electricity number fields. Claude reads the
+         actual figures off the photo (here or from chat) and records them
+         separately; typing amounts in this app is not a thing anymore. -->
+    <button class="calc secondary" id="billsAttachPhotoBtn" type="button" style="display:none; margin-top:10px;">📎 إرفاق صورة الفاتورة</button>
   </section>
 
   <section class="card" style="margin-top:18px;">
@@ -906,11 +927,15 @@
 
   function calculate() {
     // This tab is a pure DISPLAY of the officially recorded bill for the
-    // browsed month -- there is nothing to type in. The only way a bill
-    // ever becomes official is the admin-only "تسجيل / تعديل فاتورة" button
-    // below (visible only when unlocked), which writes through
-    // admin_record_bill on the server. Any of the 7 neighbors can freely
-    // browse past months here without risking changing anything.
+    // browsed month -- there is nothing to type in. The only way real
+    // figures get set is Claude reading a bill photo (sent in chat, or
+    // attached via the button below) and calling admin_record_bill
+    // directly -- there is no in-app form for typing amounts. A bill row
+    // can exist with a photo attached but processed:false (photo uploaded,
+    // Claude hasn't read the figures off it yet); that is treated the same
+    // as "no bill" for the numbers, but the photo link still shows since
+    // it's already there. Any of the 7 neighbors can freely browse past
+    // months here without risking changing anything.
     var labelEl = document.getElementById('billsMonthLabel');
     if (labelEl) labelEl.textContent = monthLabelLocal(billsAsOf);
     var badgeEl = document.getElementById('monthBadge');
@@ -923,39 +948,21 @@
       nextBtnEl.style.cursor = atLatest ? 'default' : 'pointer';
     }
 
-    var recordBtn = document.getElementById('billsRecordBtn');
-    if (recordBtn) recordBtn.style.display = window.__fundUnlocked ? 'block' : 'none';
+    var attachBtn = document.getElementById('billsAttachPhotoBtn');
+    if (attachBtn) attachBtn.style.display = window.__fundUnlocked ? 'inline-block' : 'none';
 
     var bill = (window.__fundBillHistory || {})[billsAsOf];
+    var usable = bill && bill.processed !== false;
     var waterEl = document.getElementById('waterTotal');
     var elecEl = document.getElementById('elecTotal');
     var recordNote = document.getElementById('billsRecordNote');
     var photoInfoEl = document.getElementById('billsPhotoInfo');
 
-    if (!bill) {
-      if (waterEl) { waterEl.textContent = '—'; waterEl.classList.add('empty'); }
-      if (elecEl) { elecEl.textContent = '—'; elecEl.classList.add('empty'); }
-      var rb = document.getElementById('resultBody'); if (rb) rb.innerHTML = '';
-      var tb = document.getElementById('totalsBody'); if (tb) tb.innerHTML = '';
-      var rn = document.getElementById('roundingNote'); if (rn) rn.innerHTML = '';
-      if (photoInfoEl) photoInfoEl.innerHTML = '';
-      if (recordNote) {
-        recordNote.style.display = 'block';
-        recordNote.textContent = window.__fundUnlocked
-          ? ('لم تُسجَّل فاتورة ' + monthLabelLocal(billsAsOf) + ' بعد — استخدم الزر أدناه لتسجيلها.')
-          : ('لم تُسجَّل فاتورة ' + monthLabelLocal(billsAsOf) + ' بعد.');
-      }
-      return;
-    }
-    if (recordNote) recordNote.style.display = 'none';
-
-    // The photo the admin attached when recording THIS bill (the actual
-    // water/electricity company bill, not the generated split table below)
-    // -- this is the feature adnan asked for directly on this tab, distinct
-    // from the "save table as image" button further down the page.
+    // The photo attached for this month (if any) shows regardless of
+    // whether Claude has processed the figures yet.
     if (photoInfoEl) {
       photoInfoEl.innerHTML = '';
-      if (bill.photoUrl) {
+      if (bill && bill.photoUrl) {
         var photoLink = document.createElement('a');
         photoLink.href = bill.photoUrl;
         photoLink.target = '_blank';
@@ -966,10 +973,26 @@
       } else if (window.__fundUnlocked) {
         var noPhotoBills = document.createElement('span');
         noPhotoBills.className = 'bill-photo-missing';
-        noPhotoBills.textContent = 'لا توجد صورة مرفقة لهذا الشهر (أضِفها من زر التسجيل أدناه)';
+        noPhotoBills.textContent = 'لم يتم إرفاق صورة الفاتورة لهذا الشهر';
         photoInfoEl.appendChild(noPhotoBills);
       }
     }
+
+    if (!usable) {
+      if (waterEl) { waterEl.textContent = '—'; waterEl.classList.add('empty'); }
+      if (elecEl) { elecEl.textContent = '—'; elecEl.classList.add('empty'); }
+      var rb = document.getElementById('resultBody'); if (rb) rb.innerHTML = '';
+      var tb = document.getElementById('totalsBody'); if (tb) tb.innerHTML = '';
+      var rn = document.getElementById('roundingNote'); if (rn) rn.innerHTML = '';
+      if (recordNote) {
+        recordNote.style.display = 'block';
+        recordNote.textContent = (bill && bill.photoUrl)
+          ? ('تم إرفاق صورة فاتورة ' + monthLabelLocal(billsAsOf) + ' — بانتظار معالجتها لعرض الأرقام.')
+          : ('لم تُسجَّل فاتورة ' + monthLabelLocal(billsAsOf) + ' بعد.');
+      }
+      return;
+    }
+    if (recordNote) recordNote.style.display = 'none';
 
     var waterTotal = parseFloat(bill.water) || 0;
     var elecTotal = parseFloat(bill.elec) || 0;
@@ -1078,9 +1101,9 @@
     if (next > todayMonthKeyLocal()) return; // no data exists yet for unpublished future months
     billsAsOf = next; calculate();
   });
-  var billsRecordBtn = document.getElementById('billsRecordBtn');
-  if (billsRecordBtn) billsRecordBtn.addEventListener('click', function () {
-    if (window.__fundRecordBillFlow) window.__fundRecordBillFlow(billsAsOf);
+  var billsAttachPhotoBtn = document.getElementById('billsAttachPhotoBtn');
+  if (billsAttachPhotoBtn) billsAttachPhotoBtn.addEventListener('click', function () {
+    if (window.__fundAttachPhotoFlow) window.__fundAttachPhotoFlow(billsAsOf);
   });
   window.__fundRecalcBills = calculate;
 
@@ -1115,7 +1138,13 @@
       if (status) status.textContent = 'جارٍ إنشاء الصورة...';
       card.classList.add('export-mode');
       var bg = getComputedStyle(document.body).getPropertyValue('--bg') || '#eef2f1';
-      html2canvas(card, { backgroundColor: bg.trim(), scale: 2 }).then(function (canvas) {
+      // width/height pinned to the card's own full scroll size -- belt and
+      // suspenders alongside the CSS sizing above, so that even if the
+      // export-mode table ends up a little wider than the visible card on
+      // some device, html2canvas still renders the whole thing instead of
+      // cropping at the viewport edge (a real bug adnan hit: the due-amount
+      // column was silently missing from the exported photo).
+      html2canvas(card, { backgroundColor: bg.trim(), scale: 2, width: card.scrollWidth, height: card.scrollHeight }).then(function (canvas) {
         card.classList.remove('export-mode');
         savePhotoBtn.disabled = false;
         var monthEl = document.getElementById('monthBadge');
@@ -1308,7 +1337,7 @@
       });
 
       var billHistory = {};
-      billRows.forEach(function (r) { billHistory[r.month.slice(0, 7)] = { water: parseFloat(r.water), elec: parseFloat(r.elec), photoUrl: r.photo_url || null }; });
+      billRows.forEach(function (r) { billHistory[r.month.slice(0, 7)] = { water: parseFloat(r.water), elec: parseFloat(r.elec), photoUrl: r.photo_url || null, processed: r.processed !== false }; });
 
       var income = incRows.map(function (r) {
         return { id: r.id, date: r.pay_date, apt: r.apt, amount: parseFloat(r.amount), forMonth: r.for_month.slice(0, 7), method: r.method };
@@ -1362,7 +1391,11 @@
   function ceilHalalasLocal(amountSar) { return Math.ceil(amountSar * 100 - 1e-9); }
   function groundDueFromBill(key) {
     var bill = (state.billHistory || {})[key];
-    if (!bill) return null;
+    // A bill row that exists only because a photo was attached (not yet
+    // read by Claude) must NOT be treated as a real, final bill -- its
+    // water/elec are just 0/0 placeholders. Same "no bill yet" fallback as
+    // when the row doesn't exist at all.
+    if (!bill || bill.processed === false) return null;
     var waterEach = ceilHalalasLocal((parseFloat(bill.water) || 0) / 7) / 100;
     var groundElec = ceilHalalasLocal((parseFloat(bill.elec) || 0) / 12) / 100;
     return waterEach + groundElec;
@@ -1671,6 +1704,17 @@
     quickTogglePaid(apt);
   }
 
+  // There is no water/electricity number entry anywhere in this app anymore
+  // -- adnan tried it once, left the amounts blank assuming the attached
+  // photo alone would be "read" automatically, and it silently saved as a
+  // real SAR 0.00 bill for everyone (there is no OCR in this static page).
+  // The actual figures only ever get set by Claude calling admin_record_bill
+  // directly, after reading them off a photo -- either one adnan pastes in
+  // chat, or one attached here (see below). Attaching a photo here just
+  // marks the month as "awaiting processing" (bill_history.processed =
+  // false via admin_set_bill_photo) so Claude knows there's something to
+  // read next time it checks -- it never touches water/elec itself.
+
   var BILL_PHOTO_UPLOAD_URL = 'https://hltdvzyocdpxhwlofmwu.supabase.co/functions/v1/upload-bill-photo';
 
   function fileToDataUrl(file) {
@@ -1682,51 +1726,32 @@
     });
   }
 
-  function recordBillFlow(monthKeyArg) {
-    // Called either from this (treasury) tab's own state, or bridged from
-    // the bills tab's independent month-browsing -- monthKeyArg lets the
-    // caller be explicit about which month it means instead of assuming
-    // this tab's currentAsOf, since the two tabs can be browsing different
-    // months at the same time.
+  function attachBillPhotoFlow(monthKeyArg) {
     var key = monthKeyArg || currentAsOf;
-    var existing = (state.billHistory || {})[key] || {};
     showModal({
-      title: 'تسجيل فاتورة ' + monthLabel(key),
-      submitLabel: 'حفظ',
+      title: 'إرفاق صورة فاتورة ' + monthLabel(key),
+      submitLabel: 'رفع',
       fields: [
-        { key: 'water', label: 'فاتورة المياه (ريال)', type: 'number', value: existing.water || '' },
-        { key: 'elec', label: 'فاتورة الكهرباء (ريال)', type: 'number', value: existing.elec || '' },
-        { key: 'photo', label: 'صورة الفاتورة (اختياري)', type: 'file' }
+        { key: 'photo', label: 'صورة الفاتورة', type: 'file' }
       ],
       onSubmit: function (values, setError, close) {
-        var water = parseFloat(values.water) || 0;
-        var elec = parseFloat(values.elec) || 0;
-        sb.rpc('admin_record_bill', { p_token: sessionToken, p_month: key + '-01', p_water: water, p_elec: elec }).then(function (res) {
-          if (res.error) { setError(friendlyRpcError(res.error)); return; }
-          if (!values.photo) { close(); refreshAndRender(); return; }
-          // The water/electricity numbers above are already saved at this
-          // point (the RPC call just above succeeded) -- a failure from here
-          // on is only "the photo didn't attach", never data loss. Close the
-          // modal either way (re-opening it would lose the already-saved
-          // numbers from view), but surface a clear alert on failure instead
-          // of silently pretending the photo was saved when it wasn't.
-          fileToDataUrl(values.photo).then(function (dataUrl) {
-            return fetch(BILL_PHOTO_UPLOAD_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ token: sessionToken, month: key + '-01', dataUrl: dataUrl })
-            });
-          }).then(function (resp) {
-            close();
-            refreshAndRender();
-            if (!resp || !resp.ok) {
-              window.alert('تم حفظ الفاتورة، لكن تعذّر رفع الصورة. أعد المحاولة من "تسجيل الفاتورة" لنفس الشهر.');
-            }
-          }).catch(function () {
-            close();
-            refreshAndRender();
-            window.alert('تم حفظ الفاتورة، لكن تعذّر رفع الصورة. أعد المحاولة من "تسجيل الفاتورة" لنفس الشهر.');
+        if (!values.photo) { setError('اختر صورة الفاتورة أولاً'); return; }
+        fileToDataUrl(values.photo).then(function (dataUrl) {
+          return fetch(BILL_PHOTO_UPLOAD_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: sessionToken, month: key + '-01', dataUrl: dataUrl })
           });
+        }).then(function (resp) {
+          close();
+          refreshAndRender();
+          if (!resp || !resp.ok) {
+            window.alert('تعذّر رفع الصورة. حاول مرة أخرى.');
+          }
+        }).catch(function () {
+          close();
+          refreshAndRender();
+          window.alert('تعذّر رفع الصورة. حاول مرة أخرى.');
         });
       }
     });
@@ -1907,9 +1932,14 @@
     var billInfoEl = document.getElementById('monthBillInfo');
     if (billInfoEl) {
       var b = (state.billHistory || {})[currentAsOf];
-      var infoText = b
-        ? ('فاتورة ' + monthLabel(currentAsOf) + ': مياه ' + fmt(b.water) + ' + كهرباء ' + fmt(b.elec) + ' = ' + fmtR((parseFloat(b.water) || 0) + (parseFloat(b.elec) || 0)))
-        : ('لم تُسجَّل فاتورة ' + monthLabel(currentAsOf) + ' بعد');
+      var infoText;
+      if (b && b.processed === false) {
+        infoText = 'تم إرفاق صورة فاتورة ' + monthLabel(currentAsOf) + ' — بانتظار معالجتها';
+      } else if (b) {
+        infoText = 'فاتورة ' + monthLabel(currentAsOf) + ': مياه ' + fmt(b.water) + ' + كهرباء ' + fmt(b.elec) + ' = ' + fmtR((parseFloat(b.water) || 0) + (parseFloat(b.elec) || 0));
+      } else {
+        infoText = 'لم تُسجَّل فاتورة ' + monthLabel(currentAsOf) + ' بعد';
+      }
       billInfoEl.innerHTML = '';
       billInfoEl.appendChild(document.createTextNode(infoText));
       if (b && b.photoUrl) {
@@ -1923,7 +1953,7 @@
       } else if (unlocked && b) {
         var noPhoto = document.createElement('span');
         noPhoto.className = 'bill-photo-missing';
-        noPhoto.textContent = ' — لا توجد صورة مرفقة لهذا الشهر (أضِفها من "تسجيل الفاتورة")';
+        noPhoto.textContent = ' — لم يتم إرفاق صورة الفاتورة لهذا الشهر';
         billInfoEl.appendChild(noPhoto);
       }
     }
@@ -1938,7 +1968,7 @@
         var pillClass, pillText, subText;
         if (noFee) {
           if (isGroundApt(apt)) {
-            pillClass = 'notdue'; pillText = 'لا توجد بيانات فاتورة'; subText = 'أدخل فاتورة الشهر في تبويب الفواتير';
+            pillClass = 'notdue'; pillText = 'لا توجد بيانات فاتورة'; subText = '';
           } else {
             pillClass = 'notdue'; pillText = 'بدون رسوم ثابتة'; subText = 'يُسجَّل عند الحاجة';
           }
@@ -2099,7 +2129,7 @@
   }
 
   updateLockIcon();
-  window.__fundRecordBillFlow = recordBillFlow;
+  window.__fundAttachPhotoFlow = attachBillPhotoFlow;
 
   // ---- initial load + polling -----------------------------------------
   // Paint instantly from this device's last-known cache (if any) so the
