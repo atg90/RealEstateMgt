@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>قسمة فواتير المبنى</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+
+  :root {
+    --bg: #eef2f1;
+    --surface: #ffffff;
+    --surface-2: #e3e9e7;
+    --ink: #16262a;
+    --ink-muted: #5c6e6f;
+    --line: #d2dcd9;
+    --line-strong: #b7c4c1;
+    --water: #1c6e8c;
+    --water-tint: #dcebf0;
+    --electric: #b9701f;
+    --electric-tint: #f6e6d2;
+    --ground-pill: #7c5a91;
+    --ground-tint: #ece3f0;
+    --up-pill: #3f8462;
+    --up-tint: #e0ede6;
+    --due-bg: #16262a;
+    --due-fg: #f3f6f5;
+    --danger: #a4463a;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(22,38,42,0.06), 0 6px 20px -8px rgba(22,38,42,0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1b1d;
+      --surface: #16262a;
+      --surface-2: #1d3034;
+      --ink: #e8eeec;
+      --ink-muted: #9fb2b0;
+      --line: #2a3d40;
+      --line-strong: #3a4f52;
+      --water: #63b8d6;
+      --water-tint: #17323b;
+      --electric: #e3993f;
+      --electric-tint: #3a2a16;
+      --ground-pill: #c6a9d9;
+      --ground-tint: #2e2436;
+      --up-pill: #8fd3ab;
+      --up-tint: #1c3227;
+      --due-bg: #f3f6f5;
+      --due-fg: #16262a;
+      --danger: #e2897c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f1b1d;
+    --surface: #16262a;
+    --surface-2: #1d3034;
+    --ink: #e8eeec;
+    --ink-muted: #9fb2b0;
+    --line: #2a3d40;
+    --line-strong: #3a4f52;
+    --water: #63b8d6;
+    --water-tint: #17323b;
+    --electric: #e3993f;
+    --electric-tint: #3a2a16;
+    --ground-pill: #c6a9d9;
+    --ground-tint: #2e2436;
+    --up-pill: #8fd3ab;
+    --up-tint: #1c3227;
+    --due-bg: #f3f6f5;
+    --due-fg: #16262a;
+    --danger: #e2897c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px -10px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Cairo', Tahoma, 'Segoe UI', Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    direction: rtl;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 28px 18px 60px;
+  }
+
+  header.top {
+    margin-bottom: 22px;
+  }
+
+  header.top .eyebrow {
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+
+  header.top h1 {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: 800;
+    font-size: 1.7rem;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  header.top p.sub {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 0.94rem;
+    max-width: 46ch;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+
+  .card h2 {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0 0 14px;
+  }
+
+  .card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .card-title-row h2 { margin: 0; }
+  .month-badge {
+    flex: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--water);
+    background: var(--water-tint);
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
+  .bill-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .bill-inputs { grid-template-columns: 1fr; }
+  }
+
+  .stub {
+    border-inline-start: 4px solid var(--util-color, var(--line-strong));
+    background: var(--util-tint, var(--surface-2));
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+  .stub.water { --util-color: var(--water); --util-tint: var(--water-tint); }
+  .stub.electric { --util-color: var(--electric); --util-tint: var(--electric-tint); }
+
+  .stub label {
+    display: block;
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+
+  .stub .amount-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .stub input[type="number"] {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: 'Cairo', Tahoma, sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--ink);
+    padding: 2px 0;
+  }
+  .stub input[type="number"]:focus { outline: none; }
+  .stub .unit { color: var(--ink-muted); font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
+
+  .flat-rate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 0.88rem;
+    color: var(--ink-muted);
+  }
+  .flat-rate strong { color: var(--ink); font-weight: 600; }
+  .flat-rate input {
+    width: 84px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 5px 8px;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .names-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+  }
+  @media (max-width: 480px) {
+    .names-grid { grid-template-columns: 1fr; }
+  }
+
+  .name-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 8px;
+  }
+
+  .apt-badge {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .name-field.ground .apt-badge { background: var(--ground-tint); color: var(--ground-pill); }
+  .name-field.up .apt-badge { background: var(--up-tint); color: var(--up-pill); }
+
+  .name-field input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--ink);
+    min-width: 0;
+  }
+  .name-field input:focus { outline: none; }
+  .name-field input::placeholder { color: var(--ink-muted); }
+
+  button.calc {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button.calc:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
+  button.calc:active { opacity: 0.85; }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+  }
+  .legend .dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-inline-end: 5px;
+  }
+  .legend .water-dot { background: var(--water); }
+  .legend .electric-dot { background: var(--electric); }
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1.28rem;
+    min-width: 480px;
+  }
+
+  thead th {
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: right;
+    padding: 14px 14px;
+    border-bottom: 1px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  thead th.num { text-align: left; }
+
+  tbody td {
+    padding: 14px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  tbody td.num { text-align: left; font-variant-numeric: tabular-nums; }
+  tbody tr:last-of-type td { border-bottom: none; }
+
+  .apt-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.85rem;
+  }
+  .apt-num {
+    flex: none;
+    min-width: 42px;
+    height: 42px;
+    padding: 0 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.15rem;
+    background: var(--surface-2);
+  }
+
+  .floor-pill {
+    display: inline-block;
+    font-size: 1.6rem;
+    font-weight: 700;
+    padding: 4px 16px;
+    border-radius: 999px;
+  }
+  .floor-pill.ground { background: var(--ground-tint); color: var(--ground-pill); }
+  .floor-pill.up { background: var(--up-tint); color: var(--up-pill); }
+
+  td.due-cell {
+    font-weight: 800;
+  }
+  td.due-cell .chip {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 999px;
+    background: var(--due-bg);
+    color: var(--due-fg);
+    font-size: 1.85rem;
+    letter-spacing: 0.01em;
+  }
+
+  tr.totals td {
+    border-top: 2px solid var(--ink);
+    border-bottom: none;
+    background: var(--surface-2);
+    font-weight: 800;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    font-size: 1.4rem;
+  }
+
+  .note {
+    margin-top: 16px;
+  }
+  .tier-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 480px) {
+    .tier-grid { grid-template-columns: 1fr; }
+  }
+  .tier-box {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    background: var(--surface-2);
+  }
+  .tier-box h3 {
+    margin: 0 0 10px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tier-box h3 .dot {
+    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  }
+  .tier-box .ln {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.92rem;
+    color: var(--ink-muted);
+    padding: 4px 0;
+  }
+  .tier-box .ln span.v { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; margin-inline-start: 10px; }
+  .tier-box .ln.total {
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line-strong);
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 1.05rem;
+    align-items: baseline;
+  }
+  .tier-box .ln.total span.v { font-weight: 800; font-size: 1.35rem; }
+
+  .pay-note {
+    margin-top: 18px;
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    padding: 18px;
+    background: var(--surface-2);
+  }
+  .pay-note .pay-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin: 0 0 6px;
+  }
+  .pay-note .pay-title .warn-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--electric);
+    flex: none;
+  }
+  .pay-note .pay-sub {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    line-height: 1.65;
+    margin: 0 0 16px;
+  }
+  .pay-note .pay-sub b { color: var(--ink); font-weight: 700; }
+  .pay-body {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+  }
+  .pay-note .barcode-slot {
+    flex: none;
+    order: 2;
+    width: 160px;
+    align-self: stretch;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--ink-muted);
+    background: #ffffff;
+    padding: 6px;
+    line-height: 1.4;
+    overflow: hidden;
+  }
+  .pay-note .barcode-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .pay-details {
+    order: 1;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 9px;
+  }
+  .pay-details .prow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 8px;
+  }
+  .pay-details .prow:last-child { border-bottom: none; padding-bottom: 0; }
+  .pay-details .prow .pk {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    flex: none;
+  }
+  .pay-details .prow .pv {
+    font-weight: 700;
+    font-size: 0.98rem;
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    direction: ltr;
+    word-break: break-all;
+  }
+  @media (max-width: 460px) {
+    .pay-body { flex-direction: column; align-items: stretch; }
+    .pay-note .barcode-slot { width: 100%; height: 200px; align-self: auto; }
+  }
+
+  .photo-hint {
+    font-size: 0.88rem;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin: 0 0 14px;
+  }
+  .share-photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+
+  .share-box textarea {
+    width: 100%;
+    min-height: 190px;
+    resize: vertical;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px;
+    font-family: 'Cairo', Tahoma, sans-serif;
+    font-size: 0.86rem;
+    color: var(--ink);
+    background: var(--surface-2);
+    direction: rtl;
+    line-height: 1.9;
+  }
+
+  .share-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  button.copy {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.86rem;
+    cursor: pointer;
+  }
+  button.copy:hover { background: var(--surface-2); }
+  button.copy:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
+
+  .copy-status {
+    font-size: 0.82rem;
+    color: var(--up-pill);
+    min-height: 1em;
+  }
+
+  footer.hint {
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 0.76rem;
+    margin-top: 26px;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card, table { transition: background-color 0.2s ease; }
+  }
+
+  /* ---- Dashboard tab (v2 -- ledger-based) ---- */
+  .page.dash-mode header.top { display: none; }
+  .page.dash-mode .tabbar { margin-top: 4px; }
+  .tabbar { display:flex; gap:8px; margin: 0 0 14px; }
+  .tabbar button {
+    flex:1; padding:10px 8px; border-radius:8px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-muted); font-family:'Cairo',sans-serif;
+    font-weight:700; font-size:0.95rem; cursor:pointer;
+  }
+  .tabbar button.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .hidden-view { display:none !important; }
+
+  .dash-card { padding: 10px 16px; }
+  .dash-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
+  .dash-head h2 { margin:0; font-size:1.05rem; }
+  .dash-head .dash-sub { font-size:0.66rem; color:var(--ink-muted); font-weight:600; margin-top:1px; }
+  .dash-head .dash-due { font-size:0.66rem; color:var(--water); font-weight:700; margin-top:2px; }
+  .sync-status { font-size:0.6rem; font-weight:700; margin-top:2px; }
+  .sync-status.ok { color: var(--up-pill); }
+  .sync-status.warn { color: var(--danger); }
+  .sync-status.pending { color: var(--ink-muted); }
+  .lock-btn { border:1px solid var(--line); background:transparent; border-radius:8px; font-size:1rem; padding:3px 9px; cursor:pointer; line-height:1; flex:none; }
+  .lock-btn.unlocked { border-color: var(--up-pill); }
+
+  .dash-stats { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:4px; }
+  .dash-stats-sub { text-align:center; font-size:0.64rem; color:var(--ink-muted); margin:0 0 10px; }
+  .dstat { border:1px solid var(--line); border-radius:9px; padding:6px 9px; display:flex; flex-direction:column; gap:1px; }
+  .dstat-label { font-size:0.64rem; color:var(--ink-muted); font-weight:600; }
+  .dstat-val { font-size:1.1rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .dstat.outstanding .dstat-val { color: var(--danger); }
+  .dstat-val.good { color: var(--up-pill); }
+  .dstat-val.bad { color: var(--danger); }
+
+  .month-nav { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:5px; }
+  .month-nav button { border:none; background:transparent; font-size:1.2rem; color:var(--ink); cursor:pointer; padding:2px 8px; }
+  .month-nav span { font-weight:700; font-size:0.86rem; min-width:9ch; text-align:center; }
+  .month-bill-info { text-align:center; font-size:0.68rem; color:var(--ink-muted); margin-bottom:8px; }
+
+  .pay-list { display:flex; flex-direction:column; gap:3px; margin-bottom:6px; }
+  .pay-row { display:flex; align-items:center; gap:6px; padding:2px 8px; border:1px solid var(--line); border-radius:8px; font-size:0.74rem; }
+  .pay-row .pr-name { display:flex; align-items:center; gap:5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1 1 auto; min-width:0; }
+  .pay-row .pr-name .apt-badge { width:19px; height:19px; font-size:0.62rem; flex:none; }
+  .pay-row .pr-sub { color:var(--ink-muted); font-size:0.62rem; font-variant-numeric:tabular-nums; flex:none; white-space:nowrap; }
+  .pay-pill { border:none; border-radius:999px; padding:3px 9px; font-size:0.66rem; font-weight:700; font-family:inherit; cursor:default; flex:none; white-space:nowrap; }
+  .pay-pill.paid { background: var(--up-tint); color: var(--up-pill); }
+  .pay-pill.unpaid { background: rgba(164,70,58,0.12); color: var(--danger); }
+  .pay-pill.notdue { background: var(--line); color: var(--ink-muted); }
+  .pay-pill.editable { cursor:pointer; }
+
+  .dash-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .dash-actions button { flex:1; min-width:80px; padding:6px 4px; border-radius:8px; border:1px solid var(--line-strong); background:transparent; color:var(--ink); font-family:inherit; font-weight:700; font-size:0.7rem; cursor:pointer; }
+
+  .ledger-card { padding: 6px 16px 10px; }
+  .ledger-tabbar { display:flex; gap:6px; margin: 4px 0 8px; }
+  .ledger-tabbar button {
+    flex:1; padding:7px 4px; border-radius:8px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-muted); font-family:'Cairo',sans-serif;
+    font-weight:700; font-size:0.78rem; cursor:pointer;
+  }
+  .ledger-tabbar button.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .ledger-body { margin-bottom:6px; max-height:260px; overflow-y:auto; }
+  .ledger-body.hidden-view { display:none !important; }
+  .exp-row { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px 0; border-bottom:1px dashed var(--line); font-size:0.72rem; }
+  .exp-row:last-child { border-bottom:none; }
+  .exp-desc { color:var(--ink-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .exp-amt { font-weight:700; font-variant-numeric:tabular-nums; flex:none; }
+  .exp-del { flex:none; border:none; background:transparent; color:var(--ink-muted); font-size:0.78rem; cursor:pointer; padding:2px 4px; line-height:1; }
+  .exp-del:hover { color: var(--danger); }
+  .exp-amt.neg { color: var(--danger); }
+  .exp-amt.pos { color: var(--up-pill); }
+  .exp-empty { color:var(--ink-muted); font-size:0.74rem; text-align:center; padding:5px 0; }
+
+  /* in-page modal (used instead of window.prompt/alert/confirm, which the
+     artifact viewer's iframe silently blocks) */
+  .modal-overlay { position:fixed; inset:0; background:rgba(10,16,17,0.5); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; box-sizing:border-box; }
+  .modal-overlay.hidden-view { display:none !important; }
+  .modal-box { background:var(--bg); border:1px solid var(--line-strong); border-radius:14px; padding:18px; width:100%; max-width:340px; max-height:85vh; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
+  .modal-box h3 { margin:0 0 12px; font-size:1rem; color:var(--ink); }
+  .modal-box p.modal-msg { font-size:0.85rem; color:var(--ink-muted); margin:0 0 14px; }
+  .modal-field { margin-bottom:10px; }
+  .modal-field label { display:block; font-size:0.76rem; color:var(--ink-muted); margin-bottom:4px; font-weight:600; }
+  .modal-field input, .modal-field select {
+    width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--line-strong);
+    border-radius:8px; background:var(--bg); color:var(--ink); font-family:inherit; font-size:0.85rem;
+  }
+  .modal-error { color:var(--danger); font-size:0.76rem; margin:-2px 0 8px; min-height:1em; }
+  .modal-actions { display:flex; gap:8px; margin-top:6px; }
+  .modal-actions button { flex:1; padding:9px; border-radius:8px; border:1px solid var(--line-strong); font-family:inherit; font-weight:700; font-size:0.85rem; cursor:pointer; }
+  .modal-actions .modal-submit { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .modal-actions .modal-cancel { background:transparent; color:var(--ink); }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="top">
+    <div class="eyebrow">الزهور 14-2 · حساب مشترك</div>
+    <h1>قسمة فواتير المبنى</h1>
+    <p class="sub">أدخل إجمالي فاتورتَي المياه والكهرباء لهذا الشهر، والأداة تحسب نصيب كل شقة تلقائيًا وتجهّز جدولًا جاهزًا للمشاركة.</p>
+  </header>
+
+  <div class="tabbar">
+    <button id="tabBillsBtn" class="active" type="button">فواتير الشهر</button>
+    <button id="tabDashBtn" type="button">صندوق العمارة</button>
+  </div>
+
+  <div id="billsView">
+
+  <section class="card">
+    <div class="card-title-row">
+      <h2>فواتير هذا الشهر</h2>
+      <span class="month-badge" id="monthBadge"></span>
+    </div>
+    <div class="bill-inputs">
+      <div class="stub water">
+        <label for="waterTotal">فاتورة المياه — الشركة الوطنية للمياه</label>
+        <div class="amount-row">
+          <input type="number" id="waterTotal" value="1086.13" step="0.01" min="0" inputmode="decimal" />
+          <span class="unit">ريال</span>
+        </div>
+      </div>
+      <div class="stub electric">
+        <label for="elecTotal">فاتورة الكهرباء — الشركة السعودية للكهرباء (مشترك)</label>
+        <div class="amount-row">
+          <input type="number" id="elecTotal" value="78.27" step="0.01" min="0" inputmode="decimal" />
+          <span class="unit">ريال</span>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="flatRate" value="200" />
+  </section>
+
+  <section class="card">
+    <h2>أسماء السكان (اختياري)</h2>
+    <div class="names-grid" id="namesGrid"></div>
+  </section>
+
+  <button class="calc" id="calcBtn">احسب القسمة</button>
+
+  <section class="card" style="margin-top:18px;">
+    <h2>جدول قسمة فواتير العمارة</h2>
+    <div class="table-scroll">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>الشقة</th>
+            <th>الطابق</th>
+            <th class="num">المطلوب دفعه</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+        <tbody id="totalsBody"></tbody>
+      </table>
+    </div>
+    <div class="note" id="roundingNote"></div>
+    <div class="pay-note">
+      <p class="pay-title"><span class="warn-dot"></span>مهم: التحويل إلى حساب العمارة</p>
+      <p class="pay-sub">يُرجى تحويل المبلغ المطلوب دفعه إلى الحساب التالي فقط (باسم <b>عدنان طارق الغصين</b>) — وليس لأي حساب شخصي آخر. يمكن مسح الباركود لإتمام التحويل مباشرة.</p>
+      <div class="pay-body">
+        <div class="barcode-slot" id="barcodeSlot"></div>
+        <div class="pay-details">
+          <div class="prow"><span class="pk">الاسم</span><span class="pv" style="direction:rtl;">عدنان طارق الغصين</span></div>
+          <div class="prow"><span class="pk">رقم الحساب</span><span class="pv">07703011 0006086231767</span></div>
+          <div class="prow"><span class="pk">رقم الآيبان (IBAN)</span><span class="pv">SA67 8000 0858 6081 1623 1767</span></div>
+          <div class="prow"><span class="pk">كود سويفت (SWIFT)</span><span class="pv">RJHISARI</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <p class="photo-hint">اضغط مطوّلًا على الصورة ثم اختر "حفظ الصورة" لتنزيلها على جوالك، أو "مشاركة" لإرسالها مباشرة على واتساب.</p>
+    <p class="photo-hint" style="color:var(--ink-muted)">(صورة القسمة غير متاحة في هذا الإصدار المستضاف — راجع النسخة المرسلة من عدنان مباشرة عند الحاجة)</p>
+  </section>
+
+  <section class="card share-box">
+    <h2>نص جاهز للمشاركة</h2>
+    <textarea id="shareText" readonly></textarea>
+    <div class="share-actions">
+      <button class="copy" id="copyBtn">نسخ النص</button>
+      <span class="copy-status" id="copyStatus"></span>
+    </div>
+  </section>
+
+  <footer class="hint">الأسماء تُحفظ تلقائيًا في هذا المتصفح لاستخدامها في المرة القادمة.</footer>
+
+  </div>
+
+  <div id="dashboardView" class="hidden-view">
+    <section class="card dash-card">
+      <div class="dash-head">
+        <div>
+          <h2>صندوق العمارة</h2>
+          <div class="dash-sub" id="dashAsOf">&mdash;</div>
+          <div class="dash-due" id="dashDue">&mdash;</div>
+          <div class="sync-status" id="syncStatus"></div>
+        </div>
+        <button id="adminLockBtn" class="lock-btn" type="button" title="دخول المشرف">🔒</button>
+      </div>
+      <div class="dash-stats">
+        <div class="dstat"><span class="dstat-label">الرصيد الفعلي</span><span class="dstat-val" id="fundBalance">&mdash;</span></div>
+        <div class="dstat"><span class="dstat-label">الرصيد المتوقع (لو تحصّلت كل المتأخرات)</span><span class="dstat-val" id="fundExpected">&mdash;</span></div>
+        <div class="dstat"><span class="dstat-label">تحصيل هذا الشهر</span><span class="dstat-val" id="fundRate">&mdash;</span></div>
+        <div class="dstat outstanding"><span class="dstat-label">إجمالي المتأخرات (حتى اليوم)</span><span class="dstat-val" id="fundOutstanding">&mdash;</span></div>
+      </div>
+      <div class="dash-stats-sub" id="dashStatsSub">&mdash;</div>
+      <div class="month-nav">
+        <button id="monthPrevBtn" type="button">‹</button>
+        <span id="dashMonthLabel">&mdash;</span>
+        <button id="monthNextBtn" type="button">›</button>
+      </div>
+      <div class="month-bill-info" id="monthBillInfo"></div>
+      <div class="pay-list" id="payList"></div>
+      <div class="dash-actions" id="dashActions"></div>
+    </section>
+    <section class="card dash-card ledger-card" id="ledgerCard">
+      <div class="ledger-tabbar">
+        <button type="button" class="active" id="ledgerIncomeTabBtn">سجل المدفوعات</button>
+        <button type="button" id="ledgerSpendTabBtn">سجل المصاريف</button>
+      </div>
+      <div id="incomeLog" class="ledger-body"></div>
+      <div id="spendLog" class="ledger-body hidden-view"></div>
+    </section>
+    <script type="application/json" id="fundStateData"></script>
+
+    <div class="modal-overlay hidden-view" id="modalOverlay">
+      <div class="modal-box" id="modalBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  (function setMonthBadge() {
+    var el = document.getElementById('monthBadge');
+    if (!el) return;
+    var d = new Date();
+    el.textContent = ARABIC_MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+  })();
+
+  var APARTMENTS = [1,2,3,4,5,6,7];
+  var GROUND = [1,2];
+  var STORAGE_KEY = 'building-bill-splitter-names-v1';
+  var DEFAULT_NAMES = {
+    1: 'أبو قصي',
+    2: 'أبو أسامة',
+    3: 'أم فيصل',
+    4: 'أبو الريم',
+    5: 'أبو عمر',
+    6: 'أبو طارق',
+    7: 'أبو لمار'
+  };
+
+  function isGround(apt) { return GROUND.indexOf(apt) !== -1; }
+
+  function loadNames() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === 'object') ? parsed : {};
+    } catch (e) { return {}; }
+  }
+
+  function saveNames(names) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(names)); } catch (e) {}
+  }
+
+  var savedNames = loadNames();
+  var namesInitialized = false;
+  APARTMENTS.forEach(function (apt) { if (savedNames[apt]) namesInitialized = true; });
+  if (!namesInitialized) {
+    savedNames = Object.assign({}, DEFAULT_NAMES);
+    saveNames(savedNames);
+  }
+
+  var namesGrid = document.getElementById('namesGrid');
+  APARTMENTS.forEach(function (apt) {
+    var wrap = document.createElement('div');
+    wrap.className = 'name-field ' + (isGround(apt) ? 'ground' : 'up');
+    var badge = document.createElement('span');
+    badge.className = 'apt-badge';
+    badge.textContent = apt;
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'اسم صاحب الشقة ' + apt;
+    input.value = (savedNames[apt] != null ? savedNames[apt] : DEFAULT_NAMES[apt]) || '';
+    input.dataset.apt = apt;
+    input.addEventListener('input', function () {
+      var current = loadNames();
+      current[apt] = input.value;
+      saveNames(current);
+    });
+    wrap.appendChild(badge);
+    wrap.appendChild(input);
+    namesGrid.appendChild(wrap);
+  });
+
+  var RIYAL = '﷼';
+
+  function fmt(n) {
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtDue(n) {
+    return fmt(n) + ' ' + RIYAL;
+  }
+
+  // Round a SAR amount UP to the nearest halala (0.01), returned as an integer
+  // halala count. Rounding is always up so the amounts collected never fall
+  // short of the real bill.
+  function ceilHalalas(amountSar) {
+    return Math.ceil(amountSar * 100 - 1e-9);
+  }
+
+  function calculate() {
+    var waterTotal = parseFloat(document.getElementById('waterTotal').value) || 0;
+    var elecTotal = parseFloat(document.getElementById('elecTotal').value) || 0;
+    var flatRate = parseFloat(document.getElementById('flatRate').value) || 0;
+    var names = loadNames();
+
+    // Every apartment pays the SAME water halalas, and every apartment within
+    // a floor tier pays the SAME electricity halalas — no per-apartment
+    // rounding differences, so no two neighbors in the same tier ever see a
+    // different number.
+    //
+    // Ground and upstairs electricity shares are rounded up INDEPENDENTLY
+    // from their own true value (ground = elecTotal/12, upstairs = double
+    // that) rather than by doubling the already-rounded ground figure —
+    // doubling first would give the wrong halala (e.g. 6.53 x 2 = 13.06
+    // when the true upstairs value of 13.045 should round up to 13.05).
+    // Because each is rounded independently, "upstairs = exactly double
+    // ground" can be off by a single halala after rounding; that halala is
+    // simply absorbed into the ground share (they already pay less overall).
+    var waterCentsEach = ceilHalalas(waterTotal / 7);
+    var groundElecExact = elecTotal / 12;
+    var upElecCents = ceilHalalas(groundElecExact * 2);
+    var groundElecCents = ceilHalalas(groundElecExact);
+
+    var rows = APARTMENTS.map(function (apt) {
+      var ground = isGround(apt);
+      var elecCents = ground ? groundElecCents : upElecCents;
+      var computedCents = waterCentsEach + elecCents;
+      var dueCents = ground ? computedCents : Math.round(flatRate * 100);
+      return {
+        apt: apt,
+        name: (names[apt] || '').trim(),
+        ground: ground,
+        water: waterCentsEach / 100,
+        elec: elecCents / 100,
+        computed: computedCents / 100,
+        due: dueCents / 100
+      };
+    });
+
+    var collected = {
+      water: rows.reduce(function (a, r) { return a + r.water; }, 0),
+      elec: rows.reduce(function (a, r) { return a + r.elec; }, 0)
+    };
+
+    renderTable(rows);
+    renderNote(rows, waterTotal, elecTotal, collected, flatRate);
+    renderShareText(rows, waterTotal, elecTotal);
+
+    // Feed this month's real water/electricity totals into the fund
+    // dashboard's bill history (defined by the dashboard script further down
+    // the page), so the ground-floor apartments' fund dashboard due amount is
+    // computed from the ACTUAL bill split, not typed in by hand. Guarded
+    // because on the very first automatic calculate() call (page load) the
+    // dashboard script hasn't run yet -- only calls after that (e.g. tapping
+    // "احسب القسمة") actually record.
+    if (window.__fundRecordBill) {
+      var nowForRecord = new Date();
+      var recordKey = nowForRecord.getFullYear() + '-' + (nowForRecord.getMonth() + 1 < 10 ? '0' : '') + (nowForRecord.getMonth() + 1);
+      window.__fundRecordBill(recordKey, waterTotal, elecTotal);
+    }
+  }
+
+  function renderTable(rows) {
+    var body = document.getElementById('resultBody');
+    body.innerHTML = '';
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      var label = r.name ? r.name : ('شقة رقم ' + r.apt);
+      tr.innerHTML =
+        '<td><span class="apt-cell"><span class="apt-num">' + r.apt + '</span>' + label + '</span></td>' +
+        '<td><span class="floor-pill ' + (r.ground ? 'ground' : 'up') + '">' + (r.ground ? 'أرضي' : 'علوي') + '</span></td>' +
+        '<td class="num due-cell"><span class="chip">' + fmtDue(r.due) + '</span></td>';
+      body.appendChild(tr);
+    });
+
+    var due = rows.reduce(function (a, r) { return a + r.due; }, 0);
+    var totalsBody = document.getElementById('totalsBody');
+    totalsBody.innerHTML =
+      '<tr class="totals">' +
+      '<td colspan="2">الإجمالي المُحصَّل</td>' +
+      '<td class="num">' + fmtDue(due) + '</td>' +
+      '</tr>';
+  }
+
+  function renderNote(rows, waterTotal, elecTotal, collected, flatRate) {
+    var ground = rows.filter(function (r) { return r.ground; })[0];
+    var up = rows.filter(function (r) { return !r.ground; })[0];
+    var el = document.getElementById('roundingNote');
+
+    var html = '<div class="tier-grid">';
+    html += tierBoxHtml('شقة أرضية', 'ground', ground, false);
+    html += tierBoxHtml('شقة علوية', 'up', up, true, flatRate);
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function tierBoxHtml(title, cls, r, isUp, flatRate) {
+    var dotVar = 'var(--' + (cls === 'ground' ? 'ground-pill' : 'up-pill') + ')';
+    var out = '<div class="tier-box ' + cls + '">';
+    out += '<h3><span class="dot" style="background:' + dotVar + '"></span>' + title + '</h3>';
+    out += '<div class="ln"><span>نصيب المياه</span><span class="v">' + fmt(r.water) + ' ريال</span></div>';
+    out += '<div class="ln"><span>نصيب الكهرباء</span><span class="v">' + fmt(r.elec) + ' ريال</span></div>';
+    if (isUp) {
+      out += '<div class="ln"><span>الإجمالي المحسوب (مرجعي)</span><span class="v">' + fmt(r.computed) + ' ريال</span></div>';
+      out += '<div class="ln total"><span>المطلوب فعليًا</span><span class="v">' + fmtDue(r.due) + '</span></div>';
+    } else {
+      out += '<div class="ln total"><span>المطلوب دفعه</span><span class="v">' + fmtDue(r.due) + '</span></div>';
+    }
+    out += '</div>';
+    return out;
+  }
+
+  function renderShareText(rows, waterTotal, elecTotal) {
+    var lines = [];
+    lines.push('جدول قسمة فواتير العمارة — الزهور 14-2');
+    lines.push('فاتورة المياه: ' + fmt(waterTotal) + ' ريال · فاتورة الكهرباء: ' + fmt(elecTotal) + ' ريال');
+    lines.push('');
+    rows.forEach(function (r) {
+      var label = r.name ? (r.name + ' (شقة ' + r.apt + ')') : ('شقة رقم ' + r.apt);
+      var floor = r.ground ? 'أرضي' : 'علوي';
+      lines.push(label + ' — ' + floor + ':');
+      lines.push('  مياه ' + fmt(r.water) + ' + كهرباء ' + fmt(r.elec) + ' = ' + fmt(r.computed) + ' ريال');
+      lines.push('  المطلوب دفعه: ' + fmtDue(r.due) + (r.ground ? '' : ' (اتفاق ثابت)'));
+      lines.push('');
+    });
+    var sumDue = rows.reduce(function (a, r) { return a + r.due; }, 0);
+    lines.push('إجمالي المُحصَّل هذا الشهر: ' + fmtDue(sumDue));
+    document.getElementById('shareText').value = lines.join('\n');
+  }
+
+  document.getElementById('calcBtn').addEventListener('click', calculate);
+  document.getElementById('copyBtn').addEventListener('click', function () {
+    var ta = document.getElementById('shareText');
+    var status = document.getElementById('copyStatus');
+    ta.focus();
+    ta.select();
+    var done = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(ta.value).then(function () {
+          status.textContent = 'تم النسخ ✓';
+        }).catch(function () {
+          status.textContent = 'تم التحديد — انسخ يدويًا';
+        });
+        done = true;
+      }
+    } catch (e) {}
+    if (!done) { status.textContent = 'تم التحديد — انسخ يدويًا'; }
+    setTimeout(function () { status.textContent = ''; }, 3500);
+  });
+
+  calculate();
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
+<script>
+(function () {
+  var RIYAL = '﷼';
+  var ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var ARABIC_MONTHS_SET = {};
+  ARABIC_MONTHS.forEach(function (m, i) { ARABIC_MONTHS_SET[m] = i; });
+  var GROUND = [1, 2];
+  function isGroundApt(apt) { return GROUND.indexOf(apt) !== -1; }
+
+  function fmt(n) {
+    var v = Math.round((parseFloat(n) || 0) * 100) / 100;
+    return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtR(n) { return fmt(n) + ' ' + RIYAL; }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function monthKey(y, m) { return y + '-' + pad2(m + 1); }
+  function keyToYM(key) { var p = key.split('-'); return { y: parseInt(p[0], 10), m: parseInt(p[1], 10) - 1 }; }
+  function monthLabel(key) { var ym = keyToYM(key); return ARABIC_MONTHS[ym.m] + ' ' + ym.y; }
+  function addMonths(key, delta) {
+    var ym = keyToYM(key);
+    var total = ym.y * 12 + ym.m + delta;
+    var y = Math.floor(total / 12), m = ((total % 12) + 12) % 12;
+    return monthKey(y, m);
+  }
+  function todayKey() { var d = new Date(); return monthKey(d.getFullYear(), d.getMonth()); }
+  function todayDateStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function parseArabicMonthLabelToKey(label) {
+    if (!label) return null;
+    var parts = String(label).trim().split(/\s+/);
+    if (parts.length < 2) return null;
+    var idx = ARABIC_MONTHS_SET[parts[0]];
+    var year = parseInt(parts[1], 10);
+    if (idx == null || !year) return null;
+    return monthKey(year, idx);
+  }
+
+  // ---- Supabase -----------------------------------------------------
+  var SUPABASE_URL = 'https://hltdvzyocdpxhwlofmwu.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_ScUTbZ1S39pfw8IHmeYZjQ_XAtIi3Kx';
+  // auth: {} options disable GoTrueClient's cross-tab session machinery -- this
+  // app never uses Supabase Auth (admin identity is a plain RPC session token,
+  // not a Supabase Auth session), and that unused machinery is what was
+  // crashing with "DataCloneError: Headers object could not be cloned" on
+  // some browsers/webviews (a known supabase-js multi-tab lock bug).
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  });
+
+  var STATE_KEY_LOCAL = 'building-fund-state-v4';
+  function loadLocalState() {
+    try {
+      var raw = localStorage.getItem(STATE_KEY_LOCAL);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function saveLocalState(s) {
+    try { localStorage.setItem(STATE_KEY_LOCAL, JSON.stringify(s)); } catch (e) {}
+  }
+
+  function getAptName(apt) {
+    return (state && state.names && state.names[apt]) || ('شقة ' + apt);
+  }
+
+  var state = null;
+  var initialLoadDone = false;
+  var currentAsOf = todayKey();
+  var sessionToken = null;
+  try { sessionToken = sessionStorage.getItem('adminSessionToken') || null; } catch (e) {}
+  var unlocked = !!sessionToken;
+
+  function setSyncStatus(kind, text) {
+    var el = document.getElementById('syncStatus');
+    if (!el) return;
+    el.className = 'sync-status' + (kind ? ' ' + kind : '');
+    el.textContent = text || '';
+  }
+
+  // Single read path: reassembles the exact same in-memory `state` shape the
+  // rest of this file already works with (settings/names/income/spendings/
+  // billHistory) from the six public tables, so every calculation function
+  // below is completely untouched by the move to Supabase.
+  function loadFromSupabase() {
+    return Promise.all([
+      sb.from('apartments').select('*').order('id'),
+      sb.from('settings').select('*').limit(1).maybeSingle(),
+      sb.from('fee_schedule').select('*'),
+      sb.from('bill_history').select('*'),
+      sb.from('income').select('*'),
+      sb.from('spendings').select('*'),
+      sb.rpc('admin_has_pin')
+    ]).then(function (results) {
+      var errs = results.filter(function (r) { return r && r.error; });
+      if (errs.length) throw errs[0].error;
+      var apts = results[0].data || [];
+      var settingsRow = results[1].data || {};
+      var feeRows = results[2].data || [];
+      var billRows = results[3].data || [];
+      var incRows = results[4].data || [];
+      var spRows = results[5].data || [];
+      var hasPin = !!results[6].data;
+
+      var names = {}, activeApartments = [];
+      apts.forEach(function (a) { names[a.id] = a.name; if (a.is_active) activeApartments.push(a.id); });
+      activeApartments.sort(function (a, b) { return a - b; });
+
+      var feeHistory = [], groundFeeHistory = [];
+      feeRows.forEach(function (r) {
+        var entry = { from: r.effective_month.slice(0, 7), amount: parseFloat(r.amount) };
+        if (r.kind === 'upstairs_fixed') feeHistory.push(entry); else groundFeeHistory.push(entry);
+      });
+
+      var billHistory = {};
+      billRows.forEach(function (r) { billHistory[r.month.slice(0, 7)] = { water: parseFloat(r.water), elec: parseFloat(r.elec) }; });
+
+      var income = incRows.map(function (r) {
+        return { id: r.id, date: r.pay_date, apt: r.apt, amount: parseFloat(r.amount), forMonth: r.for_month.slice(0, 7), method: r.method };
+      });
+      var spendings = spRows.map(function (r) {
+        return { id: r.id, date: r.spend_date, desc: r.description, category: r.category, amount: parseFloat(r.amount), forMonth: r.for_month.slice(0, 7) };
+      });
+
+      state = {
+        settings: {
+          openingBalance: parseFloat(settingsRow.opening_balance) || 0,
+          dueDay: settingsRow.due_day || 28,
+          startMonth: settingsRow.start_month ? settingsRow.start_month.slice(0, 7) : '2026-03',
+          activeApartments: activeApartments,
+          cleaningRate: parseFloat(settingsRow.cleaning_rate) || 150,
+          groundFeeHistory: groundFeeHistory,
+          feeHistory: feeHistory
+        },
+        names: names,
+        income: income,
+        spendings: spendings,
+        billHistory: billHistory,
+        hasPin: hasPin
+      };
+      saveLocalState(state);
+      initialLoadDone = true;
+      setSyncStatus('ok', 'متصل — محدَّث الآن');
+      return state;
+    }).catch(function (err) {
+      setSyncStatus('warn', 'غير متصل (' + ((err && err.message) || 'خطأ') + ')');
+      throw err;
+    });
+  }
+
+  function refreshAndRender() {
+    return loadFromSupabase().then(function () {
+      if (dashView && !dashView.classList.contains('hidden-view')) renderDashboard();
+    }).catch(function () {});
+  }
+
+  // ---- money model ----------------------------------------------------
+  function ceilHalalasLocal(amountSar) { return Math.ceil(amountSar * 100 - 1e-9); }
+  function groundDueFromBill(key) {
+    var bill = (state.billHistory || {})[key];
+    if (!bill) return null;
+    var waterEach = ceilHalalasLocal((parseFloat(bill.water) || 0) / 7) / 100;
+    var groundElec = ceilHalalasLocal((parseFloat(bill.elec) || 0) / 12) / 100;
+    return waterEach + groundElec;
+  }
+  function feeFromHistory(history, key) {
+    var hist = (history || []).slice().sort(function (a, b) { return a.from < b.from ? -1 : 1; });
+    var fee = hist.length ? hist[0].amount : 0;
+    hist.forEach(function (h) { if (h.from <= key) fee = h.amount; });
+    return fee;
+  }
+  function getFeeForMonth(apt, key) {
+    if (isGroundApt(apt)) {
+      var fromBill = groundDueFromBill(key);
+      return fromBill != null ? fromBill : feeFromHistory(state.settings.groundFeeHistory, key);
+    }
+    return feeFromHistory(state.settings.feeHistory, key);
+  }
+
+  function isMonthDue(key) {
+    var real = todayKey();
+    if (key < real) return true;
+    if (key > real) return false;
+    var d = new Date();
+    return d.getDate() >= (state.settings.dueDay || 28);
+  }
+
+  function monthsRange(startKey, endKey) {
+    var out = [], k = startKey, guard = 0;
+    while (k <= endKey && guard < 240) { out.push(k); k = addMonths(k, 1); guard++; }
+    return out;
+  }
+
+  function paidForMonth(apt, key) {
+    return state.income.filter(function (e) { return e.apt === apt && e.forMonth === key; })
+      .reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0);
+  }
+
+  function monthStatus(apt, key) {
+    var fee = getFeeForMonth(apt, key);
+    if (fee <= 0) return 'nofee';
+    var paid = paidForMonth(apt, key);
+    if (paid >= fee) return 'paid';
+    if (!isMonthDue(key)) return 'notdue';
+    if (paid > 0) return 'partial';
+    return 'late';
+  }
+
+  // startKeyOverride lets a caller scope the sums to a custom window instead of the
+  // full history since state.settings.startMonth -- e.g. passing the same month as
+  // both asOfKey and startKeyOverride gives single-month-only stats (monthsRange then
+  // returns just that one month), and passing this calendar year's January gives a
+  // year-to-date figure. Used to separate "this month" / "since the fund began" /
+  // "since Jan 1" readings that previously all collapsed into one ambiguous number.
+  function aptStats(apt, asOfKey, startKeyOverride) {
+    var months = monthsRange(startKeyOverride || state.settings.startMonth, asOfKey);
+    var expected = 0, collected = 0, overdueMonths = 0, statusThisMonth = 'notdue';
+    months.forEach(function (key) {
+      var fee = getFeeForMonth(apt, key);
+      var status = monthStatus(apt, key);
+      var resolved = (status === 'paid' || status === 'partial' || status === 'late');
+      if (resolved) {
+        expected += fee;
+        collected += Math.min(paidForMonth(apt, key), fee);
+      }
+      if (status === 'late') overdueMonths++;
+      if (key === asOfKey) statusThisMonth = status;
+    });
+    var totalPaid = state.income.filter(function (e) { return e.apt === apt; })
+      .reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0);
+    var remaining = Math.max(0, expected - collected);
+    var lastPaymentDate = null;
+    state.income.filter(function (e) { return e.apt === apt; }).forEach(function (e) {
+      if (!lastPaymentDate || e.date > lastPaymentDate) lastPaymentDate = e.date;
+    });
+    var pct = expected > 0 ? Math.round((collected / expected) * 100) : 100;
+    return { expected: expected, collected: collected, totalPaid: totalPaid, remaining: remaining, overdueMonths: overdueMonths, lastPaymentDate: lastPaymentDate, pct: pct, statusThisMonth: statusThisMonth };
+  }
+
+  function computeGlobal(asOfKey, startKeyOverride) {
+    var apts = state.settings.activeApartments;
+    // balance is the real ledger total (opening + all income - all spending) -- always
+    // all-time, never scoped by asOfKey/startKeyOverride, since it's the actual bank
+    // balance regardless of which month is being browsed.
+    var balance = (parseFloat(state.settings.openingBalance) || 0)
+      + state.income.reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0)
+      - state.spendings.reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0);
+    var expected = 0, collected = 0, outstanding = 0, perApt = {};
+    apts.forEach(function (apt) {
+      var s = aptStats(apt, asOfKey, startKeyOverride);
+      perApt[apt] = s;
+      expected += s.expected; collected += s.totalPaid > s.expected ? s.expected : s.collected; outstanding += s.remaining;
+    });
+    var rate = expected > 0 ? Math.round((collected / expected) * 100) : 100;
+    return { balance: balance, expected: expected, collected: collected, outstanding: outstanding, rate: rate, perApt: perApt };
+  }
+
+  function yearStartKey(key) {
+    return key.slice(0, 4) + '-01';
+  }
+
+  // ---- in-page modal ----------------------------------------------------
+  function closeModal() {
+    var overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.classList.add('hidden-view');
+  }
+
+  function showModal(opts) {
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+    if (!overlay || !box) return;
+    var html = '<h3>' + opts.title + '</h3>';
+    (opts.fields || []).forEach(function (f) {
+      html += '<div class="modal-field"><label>' + f.label + '</label>';
+      if (f.type === 'select') {
+        html += '<select id="mf_' + f.key + '">' + (f.options || []).map(function (o) {
+          return '<option value="' + o + '"' + (o === f.value ? ' selected' : '') + '>' + o + '</option>';
+        }).join('') + '</select>';
+      } else {
+        html += '<input type="' + (f.type === 'number' ? 'number' : (f.type === 'password' ? 'password' : 'text')) +
+          '" id="mf_' + f.key + '" value="' + (f.value != null ? f.value : '') + '"' +
+          (f.type === 'number' ? ' inputmode="decimal"' : '') +
+          (f.type === 'password' ? ' inputmode="numeric" autocomplete="off"' : '') + ' />';
+      }
+      html += '</div>';
+    });
+    html += '<div class="modal-error" id="modalError"></div>';
+    html += '<div class="modal-actions"><button type="button" class="modal-cancel" id="modalCancelBtn">إلغاء</button><button type="button" class="modal-submit" id="modalSubmitBtn">' + (opts.submitLabel || 'حفظ') + '</button></div>';
+    box.innerHTML = html;
+    overlay.classList.remove('hidden-view');
+    if (opts.onFieldChange) {
+      (opts.fields || []).forEach(function (f) {
+        if (f.type !== 'select') return;
+        var elSel = document.getElementById('mf_' + f.key);
+        if (elSel) elSel.addEventListener('change', function () { opts.onFieldChange(f.key, elSel.value); });
+      });
+    }
+    document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('modalSubmitBtn').addEventListener('click', function (ev) {
+      var btn = ev.currentTarget;
+      if (btn.disabled) return;
+      btn.disabled = true;
+      var values = {};
+      (opts.fields || []).forEach(function (f) {
+        var el = document.getElementById('mf_' + f.key);
+        values[f.key] = el ? el.value : '';
+      });
+      var setError = function (msg) {
+        var e = document.getElementById('modalError');
+        if (e) e.textContent = msg || '';
+        btn.disabled = false;
+      };
+      opts.onSubmit(values, setError, closeModal);
+    });
+  }
+
+  function showConfirm(title, message, onYes) {
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+    if (!overlay || !box) return;
+    box.innerHTML = '<h3>' + title + '</h3><p class="modal-msg">' + message + '</p>' +
+      '<div class="modal-actions"><button type="button" class="modal-cancel" id="modalCancelBtn">إلغاء</button><button type="button" class="modal-submit" id="modalSubmitBtn">تأكيد</button></div>';
+    overlay.classList.remove('hidden-view');
+    document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('modalSubmitBtn').addEventListener('click', function (ev) {
+      if (ev.currentTarget.disabled) return;
+      ev.currentTarget.disabled = true;
+      closeModal();
+      onYes();
+    });
+  }
+
+  function friendlyRpcError(err, fallback) {
+    var msg = (err && err.message) || '';
+    if (msg.indexOf('wrong_pin') !== -1) return 'رمز غير صحيح';
+    if (msg.indexOf('locked') !== -1) return 'محاولات كثيرة خاطئة — حاول لاحقًا';
+    if (msg.indexOf('no_pin_set') !== -1) return 'لم يتم تعيين رمز بعد';
+    if (msg.indexOf('pin_already_set') !== -1) return 'تم تعيين رمز مسبقًا';
+    if (msg.indexOf('not_authorized') !== -1) return 'انتهت صلاحية الجلسة — أعد الدخول';
+    return fallback || 'حدث خطأ، حاول مرة أخرى';
+  }
+
+  // ---- admin actions --------------------------------------------------
+  function addPaymentFlow(presetApt) {
+    var defaultApt = presetApt || state.settings.activeApartments.filter(function (a) { return !isGroundApt(a); })[0] || state.settings.activeApartments[0];
+    showModal({
+      title: 'تسجيل دفعة',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'apt', label: 'رقم الشقة (1 إلى 7)', type: 'number', value: defaultApt },
+        { key: 'amount', label: 'المبلغ (ريال)', type: 'number', value: getFeeForMonth(defaultApt, currentAsOf) || '' },
+        { key: 'forMonth', label: 'عن أي شهر؟', type: 'text', value: monthLabel(currentAsOf) }
+      ],
+      onSubmit: function (values, setError, close) {
+        var apt = parseInt(values.apt, 10);
+        if (state.settings.activeApartments.indexOf(apt) === -1) { setError('رقم شقة غير صالح'); return; }
+        var amount = parseFloat(values.amount);
+        if (!amount || amount <= 0) { setError('أدخل مبلغًا صحيحًا'); return; }
+        var key = parseArabicMonthLabelToKey(values.forMonth) || currentAsOf;
+        sb.rpc('admin_add_income', { p_token: sessionToken, p_apt: apt, p_amount: amount, p_pay_date: todayDateStr(), p_for_month: key + '-01', p_method: 'يدوي' }).then(function (res) {
+          if (res.error) { setError(friendlyRpcError(res.error)); return; }
+          close();
+          refreshAndRender();
+        });
+      }
+    });
+  }
+
+  function addSpendingFlow(presetDesc, presetAmount, presetCategory) {
+    showModal({
+      title: 'تسجيل مصروف',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'amount', label: 'المبلغ (ريال)', type: 'number', value: presetAmount != null ? presetAmount : '' },
+        { key: 'desc', label: 'الوصف', type: 'text', value: presetDesc || '' },
+        { key: 'category', label: 'التصنيف', type: 'select', options: ['تنظيف', 'فواتير', 'صيانة', 'أخرى'], value: presetCategory || 'أخرى' }
+      ],
+      onFieldChange: function (key, value) {
+        if (key !== 'category' || value !== 'تنظيف') return;
+        var amountEl = document.getElementById('mf_amount');
+        var descEl = document.getElementById('mf_desc');
+        if (amountEl && !amountEl.value) amountEl.value = state.settings.cleaningRate;
+        if (descEl && !descEl.value) descEl.value = 'تنظيف العمارة';
+      },
+      onSubmit: function (values, setError, close) {
+        var amount = parseFloat(values.amount);
+        if (!amount || amount <= 0) { setError('أدخل مبلغًا صحيحًا'); return; }
+        sb.rpc('admin_add_spending', { p_token: sessionToken, p_desc: values.desc || '', p_category: values.category || 'أخرى', p_amount: amount, p_for_month: currentAsOf + '-01' }).then(function (res) {
+          if (res.error) { setError(friendlyRpcError(res.error)); return; }
+          close();
+          refreshAndRender();
+        });
+      }
+    });
+  }
+
+  function syncNowFlow() {
+    setSyncStatus('pending', 'جارٍ المزامنة...');
+    refreshAndRender();
+  }
+
+  function settingsFlow() {
+    showModal({
+      title: 'إعدادات الصندوق',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'fee', label: 'الرسوم الشهرية الثابتة (أعلى) اعتبارًا من ' + monthLabel(currentAsOf), type: 'number', value: getFeeForMonth(3, currentAsOf) },
+        { key: 'groundFee', label: 'رسوم الأرضي عند عدم توفر بيانات فاتورة (احتياطي فقط)', type: 'number', value: feeFromHistory(state.settings.groundFeeHistory, currentAsOf) },
+        { key: 'cleaningRate', label: 'سعر التنظيف الافتراضي (عند اختيار "تنظيف" كتصنيف مصروف)', type: 'number', value: state.settings.cleaningRate },
+        { key: 'dueDay', label: 'يوم الاستحقاق الشهري', type: 'number', value: state.settings.dueDay },
+        { key: 'opening', label: 'الرصيد الافتتاحي', type: 'number', value: state.settings.openingBalance }
+      ],
+      onSubmit: function (values, setError, close) {
+        var calls = [];
+        var fee = parseFloat(values.fee);
+        if (fee && fee !== getFeeForMonth(3, currentAsOf)) {
+          calls.push(sb.rpc('admin_push_fee', { p_token: sessionToken, p_kind: 'upstairs_fixed', p_effective_month: currentAsOf + '-01', p_amount: fee }));
+        }
+        var groundFee = parseFloat(values.groundFee);
+        if (!isNaN(groundFee) && groundFee !== getFeeForMonth(1, currentAsOf)) {
+          calls.push(sb.rpc('admin_push_fee', { p_token: sessionToken, p_kind: 'ground_fallback', p_effective_month: currentAsOf + '-01', p_amount: groundFee }));
+        }
+        var cleaningRate = parseFloat(values.cleaningRate);
+        var dueDay = parseInt(values.dueDay, 10);
+        var opening = parseFloat(values.opening);
+        calls.push(sb.rpc('admin_set_settings', {
+          p_token: sessionToken,
+          p_opening: isNaN(opening) ? null : opening,
+          p_due_day: dueDay || null,
+          p_cleaning_rate: isNaN(cleaningRate) ? null : cleaningRate
+        }));
+        Promise.all(calls).then(function (results) {
+          var errRes = results.filter(function (r) { return r && r.error; })[0];
+          if (errRes) { setError(friendlyRpcError(errRes.error)); return; }
+          close();
+          refreshAndRender();
+        });
+      }
+    });
+  }
+
+  function quickTogglePaid(apt) {
+    var key = currentAsOf;
+    var name = getAptName(apt);
+    var existing = state.income.filter(function (e) { return e.apt === apt && e.forMonth === key; });
+    if (existing.length) {
+      showConfirm('إلغاء الدفعة', 'إلغاء تسجيل دفعة ' + name + ' لشهر ' + monthLabel(key) + '؟', function () {
+        sb.rpc('admin_toggle_paid', { p_token: sessionToken, p_apt: apt, p_month: key + '-01', p_amount: getFeeForMonth(apt, key) }).then(function () { refreshAndRender(); });
+      });
+      return;
+    }
+    var fee = getFeeForMonth(apt, key);
+    showConfirm('تسجيل دفعة', 'تسجيل دفعة ' + fmt(fee) + ' ريال لـ' + name + ' عن شهر ' + monthLabel(key) + '؟', function () {
+      sb.rpc('admin_toggle_paid', { p_token: sessionToken, p_apt: apt, p_month: key + '-01', p_amount: fee }).then(function () { refreshAndRender(); });
+    });
+  }
+
+  function onPillClick(apt) {
+    var fee = getFeeForMonth(apt, currentAsOf);
+    if (fee <= 0) { addPaymentFlow(apt); return; }
+    quickTogglePaid(apt);
+  }
+
+  function changePinFlow() {
+    showModal({
+      title: 'تغيير رمز المشرف',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'p1', label: 'الرمز الجديد (أرقام)', type: 'password' },
+        { key: 'p2', label: 'تأكيد الرمز الجديد', type: 'password' }
+      ],
+      onSubmit: function (values, setError, close) {
+        if (!values.p1) { setError('أدخل رمزًا'); return; }
+        if (values.p1 !== values.p2) { setError('الرمزان غير متطابقين'); return; }
+        sb.rpc('admin_set_pin', { p_token: sessionToken, new_pin: values.p1 }).then(function (res) {
+          if (res.error) { setError(friendlyRpcError(res.error)); return; }
+          close();
+        });
+      }
+    });
+  }
+
+  // ---- PIN lock ---------------------------------------------------
+  function updateLockIcon() {
+    var btn = document.getElementById('adminLockBtn');
+    if (!btn) return;
+    btn.textContent = unlocked ? '🔓' : '🔒';
+    btn.classList.toggle('unlocked', unlocked);
+  }
+
+  function tryUnlock() {
+    if (!initialLoadDone) return; // gate: never act before the first real fetch resolves
+    if (unlocked) {
+      unlocked = false; sessionToken = null;
+      try { sessionStorage.removeItem('adminSessionToken'); } catch (e) {}
+      updateLockIcon();
+      renderDashboard();
+      return;
+    }
+    if (!state.hasPin) {
+      showModal({
+        title: 'تعيين رمز المشرف',
+        submitLabel: 'تعيين ودخول',
+        fields: [
+          { key: 'p1', label: 'رمز جديد (أرقام)', type: 'password' },
+          { key: 'p2', label: 'تأكيد الرمز', type: 'password' }
+        ],
+        onSubmit: function (values, setError, close) {
+          if (!values.p1) { setError('أدخل رمزًا'); return; }
+          if (values.p1 !== values.p2) { setError('الرمزان غير متطابقين'); return; }
+          sb.rpc('admin_set_initial_pin', { new_pin: values.p1 }).then(function (res) {
+            if (res.error) { setError(friendlyRpcError(res.error)); return; }
+            sessionToken = res.data; unlocked = true;
+            try { sessionStorage.setItem('adminSessionToken', sessionToken); } catch (e) {}
+            close(); updateLockIcon();
+            refreshAndRender();
+          });
+        }
+      });
+    } else {
+      showModal({
+        title: 'دخول المشرف',
+        submitLabel: 'دخول',
+        fields: [{ key: 'pin', label: 'رمز المشرف', type: 'password' }],
+        onSubmit: function (values, setError, close) {
+          sb.rpc('admin_login', { pin: values.pin }).then(function (res) {
+            if (res.error) { setError(friendlyRpcError(res.error)); return; }
+            sessionToken = res.data; unlocked = true;
+            try { sessionStorage.setItem('adminSessionToken', sessionToken); } catch (e) {}
+            close(); updateLockIcon();
+            renderDashboard();
+          });
+        }
+      });
+    }
+  }
+
+  // ---- render -------------------------------------------------------
+  function renderDashboard() {
+    if (!state) {
+      var listEmpty = document.getElementById('payList');
+      if (listEmpty) listEmpty.innerHTML = '<div class="exp-empty">جارٍ التحميل...</div>';
+      return;
+    }
+    var labelEl = document.getElementById('dashMonthLabel');
+    if (labelEl) labelEl.textContent = monthLabel(currentAsOf);
+    var asOfEl = document.getElementById('dashAsOf');
+    if (asOfEl) asOfEl.textContent = 'بيانات محسوبة حتى ' + monthLabel(currentAsOf);
+    var dueEl = document.getElementById('dashDue');
+    if (dueEl) dueEl.textContent = 'موعد الاستحقاق: يوم ' + (state.settings.dueDay || 28) + ' من كل شهر';
+
+    // g stays scoped to the browsed month (currentAsOf) -- it drives statusThisMonth
+    // for the per-apartment pills below, which should reflect whichever month is
+    // being scrolled to.
+    var g = computeGlobal(currentAsOf);
+
+    // The top KPI tiles are pinned to the REAL current month regardless of which
+    // month is being browsed via the ‹ › nav -- balance/target-balance/outstanding
+    // are "where do we actually stand today" figures and shouldn't change just
+    // because someone scrolled back to look at March.
+    var today = todayKey();
+    var overall = computeGlobal(today);
+    var thisMonthOnly = computeGlobal(today, today);
+    var ytd = computeGlobal(today, (state.settings.startMonth > yearStartKey(today) ? state.settings.startMonth : yearStartKey(today)));
+
+    var balEl = document.getElementById('fundBalance');
+    if (balEl) balEl.textContent = fmtR(overall.balance);
+    var expEl = document.getElementById('fundExpected');
+    if (expEl) expEl.textContent = fmtR(overall.balance + overall.outstanding);
+    var rateEl = document.getElementById('fundRate');
+    if (rateEl) {
+      rateEl.textContent = thisMonthOnly.rate + '%';
+      rateEl.className = 'dstat-val' + (thisMonthOnly.rate >= 100 ? ' good' : (thisMonthOnly.rate < 80 ? ' bad' : ''));
+    }
+    var outEl = document.getElementById('fundOutstanding');
+    if (outEl) outEl.textContent = fmtR(overall.outstanding);
+    var statsSubEl = document.getElementById('dashStatsSub');
+    if (statsSubEl) {
+      statsSubEl.textContent = 'معدل التحصيل: منذ بداية العام ' + ytd.rate + '% · منذ تأسيس الصندوق ' + overall.rate + '%';
+    }
+    var billInfoEl = document.getElementById('monthBillInfo');
+    if (billInfoEl) {
+      var b = (state.billHistory || {})[currentAsOf];
+      billInfoEl.textContent = b
+        ? ('فاتورة ' + monthLabel(currentAsOf) + ': مياه ' + fmt(b.water) + ' + كهرباء ' + fmt(b.elec) + ' = ' + fmtR((parseFloat(b.water) || 0) + (parseFloat(b.elec) || 0)))
+        : ('لم تُسجَّل فاتورة ' + monthLabel(currentAsOf) + ' بعد');
+    }
+
+    var list = document.getElementById('payList');
+    if (list) {
+      list.innerHTML = '';
+      state.settings.activeApartments.forEach(function (apt) {
+        var s = g.perApt[apt];
+        var name = getAptName(apt);
+        var noFee = getFeeForMonth(apt, currentAsOf) <= 0;
+        var pillClass, pillText, subText;
+        if (noFee) {
+          if (isGroundApt(apt)) {
+            pillClass = 'notdue'; pillText = 'لا توجد بيانات فاتورة'; subText = 'أدخل فاتورة الشهر في تبويب الفواتير';
+          } else {
+            pillClass = 'notdue'; pillText = 'بدون رسوم ثابتة'; subText = 'يُسجَّل عند الحاجة';
+          }
+        } else if (s.statusThisMonth === 'paid') {
+          pillClass = 'paid'; pillText = 'مدفوع'; subText = s.remaining > 0 ? ('متبقي ' + fmt(s.remaining)) : 'مكتمل';
+        } else if (s.statusThisMonth === 'notdue') {
+          pillClass = 'notdue'; pillText = 'لم يحن'; subText = s.remaining > 0 ? ('متبقي ' + fmt(s.remaining)) : ('يستحق يوم ' + (state.settings.dueDay || 28));
+        } else if (s.statusThisMonth === 'partial') {
+          pillClass = 'unpaid'; pillText = 'جزئي'; subText = 'متبقي ' + fmt(s.remaining);
+        } else {
+          pillClass = 'unpaid'; pillText = 'متأخر'; subText = 'متبقي ' + fmt(s.remaining);
+        }
+        var row = document.createElement('div');
+        row.className = 'pay-row';
+        row.innerHTML =
+          '<span class="pr-name"><span class="apt-badge">' + apt + '</span>' + name + '</span>' +
+          '<span class="pr-sub">' + subText + '</span>' +
+          '<button type="button" class="pay-pill ' + pillClass + (unlocked ? ' editable' : '') + '" data-apt="' + apt + '">' + pillText + '</button>';
+        list.appendChild(row);
+      });
+      if (unlocked) {
+        Array.prototype.forEach.call(list.querySelectorAll('.pay-pill'), function (btn) {
+          btn.addEventListener('click', function () {
+            onPillClick(parseInt(btn.getAttribute('data-apt'), 10));
+          });
+        });
+      }
+    }
+
+    var actions = document.getElementById('dashActions');
+    if (actions) {
+      actions.innerHTML = '';
+      if (unlocked) {
+        [['+ دفعة', function () { addPaymentFlow(); }], ['+ مصروف', function () { addSpendingFlow(); }], ['مزامنة الآن 🔄', syncNowFlow], ['الإعدادات ⚙️', settingsFlow], ['تغيير الرمز 🔑', changePinFlow]].forEach(function (pair) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.textContent = pair[0];
+          b.addEventListener('click', pair[1]);
+          actions.appendChild(b);
+        });
+      }
+    }
+
+    renderLedgers();
+  }
+
+  function deleteRecord(kind, id) {
+    showConfirm('حذف السجل', 'هل تريد حذف هذا السجل نهائيًا؟ لا يمكن التراجع بعد الحذف.', function () {
+      var rpc = kind === 'income' ? 'admin_delete_income' : 'admin_delete_spending';
+      sb.rpc(rpc, { p_token: sessionToken, p_id: id }).then(function () { refreshAndRender(); });
+    });
+  }
+
+  function wireDeleteButtons(container) {
+    Array.prototype.forEach.call(container.querySelectorAll('.exp-del'), function (btn) {
+      btn.addEventListener('click', function () {
+        deleteRecord(btn.getAttribute('data-kind'), btn.getAttribute('data-id'));
+      });
+    });
+  }
+
+  function renderLedgers() {
+    var incLog = document.getElementById('incomeLog');
+    if (incLog) {
+      var items = state.income.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 30);
+      incLog.innerHTML = items.length ? items.map(function (e) {
+        var name = getAptName(e.apt);
+        var delBtn = unlocked ? '<button type="button" class="exp-del" data-kind="income" data-id="' + e.id + '" title="حذف">✕</button>' : '';
+        return '<div class="exp-row"><span class="exp-desc">' + e.date + ' — ' + name + ' (' + monthLabel(e.forMonth) + ')</span><span class="exp-amt pos">+' + fmt(e.amount) + '</span>' + delBtn + '</div>';
+      }).join('') : '<div class="exp-empty">لا توجد مدفوعات مسجّلة بعد</div>';
+      if (unlocked) wireDeleteButtons(incLog);
+    }
+    var spLog = document.getElementById('spendLog');
+    if (spLog) {
+      var sitems = state.spendings.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 30);
+      spLog.innerHTML = sitems.length ? sitems.map(function (e) {
+        var delBtn = unlocked ? '<button type="button" class="exp-del" data-kind="spend" data-id="' + e.id + '" title="حذف">✕</button>' : '';
+        return '<div class="exp-row"><span class="exp-desc">' + e.date + ' — ' + e.desc + ' (' + e.category + ')</span><span class="exp-amt neg">-' + fmt(e.amount) + '</span>' + delBtn + '</div>';
+      }).join('') : '<div class="exp-empty">لا توجد مصاريف مسجّلة بعد</div>';
+      if (unlocked) wireDeleteButtons(spLog);
+    }
+  }
+
+  // ---- wiring -------------------------------------------------------
+  var tabBills = document.getElementById('tabBillsBtn');
+  var tabDash = document.getElementById('tabDashBtn');
+  var billsView = document.getElementById('billsView');
+  var dashView = document.getElementById('dashboardView');
+  var pageEl = document.querySelector('.page');
+
+  if (tabBills && tabDash && billsView && dashView) {
+    tabBills.addEventListener('click', function () {
+      tabBills.classList.add('active'); tabDash.classList.remove('active');
+      billsView.classList.remove('hidden-view'); dashView.classList.add('hidden-view');
+      if (pageEl) pageEl.classList.remove('dash-mode');
+    });
+    tabDash.addEventListener('click', function () {
+      tabDash.classList.add('active'); tabBills.classList.remove('active');
+      dashView.classList.remove('hidden-view'); billsView.classList.add('hidden-view');
+      if (pageEl) pageEl.classList.add('dash-mode');
+      renderDashboard();
+    });
+  }
+
+  var lockBtn = document.getElementById('adminLockBtn');
+  if (lockBtn) lockBtn.addEventListener('click', tryUnlock);
+
+  var prevBtn = document.getElementById('monthPrevBtn');
+  var nextBtn = document.getElementById('monthNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', function () { currentAsOf = addMonths(currentAsOf, -1); renderDashboard(); });
+  if (nextBtn) nextBtn.addEventListener('click', function () { currentAsOf = addMonths(currentAsOf, 1); renderDashboard(); });
+
+  var ledgerIncomeTabBtn = document.getElementById('ledgerIncomeTabBtn');
+  var ledgerSpendTabBtn = document.getElementById('ledgerSpendTabBtn');
+  var incomeLogEl = document.getElementById('incomeLog');
+  var spendLogEl = document.getElementById('spendLog');
+  if (ledgerIncomeTabBtn && ledgerSpendTabBtn && incomeLogEl && spendLogEl) {
+    ledgerIncomeTabBtn.addEventListener('click', function () {
+      ledgerIncomeTabBtn.classList.add('active'); ledgerSpendTabBtn.classList.remove('active');
+      incomeLogEl.classList.remove('hidden-view'); spendLogEl.classList.add('hidden-view');
+    });
+    ledgerSpendTabBtn.addEventListener('click', function () {
+      ledgerSpendTabBtn.classList.add('active'); ledgerIncomeTabBtn.classList.remove('active');
+      spendLogEl.classList.remove('hidden-view'); incomeLogEl.classList.add('hidden-view');
+    });
+  }
+
+  var modalOverlay = document.getElementById('modalOverlay');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', function (ev) {
+      if (ev.target === modalOverlay) closeModal();
+    });
+  }
+
+  updateLockIcon();
+
+  // Bridge for the bills tab's calculate() to feed real water/electricity
+  // totals into bill_history + the two auto-spending rows. Admin-only (a
+  // real write, now server-enforced) -- silently does nothing if the
+  // dashboard isn't unlocked, same as every other write in this file.
+  window.__fundRecordBill = function (monthKeyStr, water, elec) {
+    if (!sessionToken) return;
+    sb.rpc('admin_record_bill', { p_token: sessionToken, p_month: monthKeyStr + '-01', p_water: parseFloat(water) || 0, p_elec: parseFloat(elec) || 0 }).then(function () {
+      refreshAndRender();
+    });
+  };
+
+  // ---- initial load + polling -----------------------------------------
+  // Paint instantly from this device's last-known cache (if any) so the
+  // page isn't blank while the first live fetch is in flight, but the
+  // cached copy is never treated as fresh: admin controls are gated on
+  // `initialLoadDone`, which is only set once loadFromSupabase() actually
+  // succeeds -- this is the direct fix for the race that let the app act
+  // on stale/default data before a real check had completed.
+  var cached = loadLocalState();
+  if (cached) { state = cached; renderDashboard(); }
+  setSyncStatus('pending', 'جارٍ التحميل...');
+  refreshAndRender();
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshAndRender();
+  });
+  setInterval(function () {
+    if (!document.hidden) refreshAndRender();
+  }, 90000);
+})();
+
+</script>
+</body>
+</html>
