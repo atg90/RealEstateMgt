@@ -1,0 +1,2046 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<title>قسمة فواتير المبنى</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+
+  :root {
+    --bg: #eef2f1;
+    --surface: #ffffff;
+    --surface-2: #e3e9e7;
+    --ink: #16262a;
+    --ink-muted: #5c6e6f;
+    --line: #d2dcd9;
+    --line-strong: #b7c4c1;
+    --water: #1c6e8c;
+    --water-tint: #dcebf0;
+    --electric: #b9701f;
+    --electric-tint: #f6e6d2;
+    --ground-pill: #7c5a91;
+    --ground-tint: #ece3f0;
+    --up-pill: #3f8462;
+    --up-tint: #e0ede6;
+    --due-bg: #16262a;
+    --due-fg: #f3f6f5;
+    --danger: #a4463a;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(22,38,42,0.06), 0 6px 20px -8px rgba(22,38,42,0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1b1d;
+      --surface: #16262a;
+      --surface-2: #1d3034;
+      --ink: #e8eeec;
+      --ink-muted: #9fb2b0;
+      --line: #2a3d40;
+      --line-strong: #3a4f52;
+      --water: #63b8d6;
+      --water-tint: #17323b;
+      --electric: #e3993f;
+      --electric-tint: #3a2a16;
+      --ground-pill: #c6a9d9;
+      --ground-tint: #2e2436;
+      --up-pill: #8fd3ab;
+      --up-tint: #1c3227;
+      --due-bg: #f3f6f5;
+      --due-fg: #16262a;
+      --danger: #e2897c;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f1b1d;
+    --surface: #16262a;
+    --surface-2: #1d3034;
+    --ink: #e8eeec;
+    --ink-muted: #9fb2b0;
+    --line: #2a3d40;
+    --line-strong: #3a4f52;
+    --water: #63b8d6;
+    --water-tint: #17323b;
+    --electric: #e3993f;
+    --electric-tint: #3a2a16;
+    --ground-pill: #c6a9d9;
+    --ground-tint: #2e2436;
+    --up-pill: #8fd3ab;
+    --up-tint: #1c3227;
+    --due-bg: #f3f6f5;
+    --due-fg: #16262a;
+    --danger: #e2897c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px -10px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Cairo', Tahoma, 'Segoe UI', Arial, sans-serif;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    direction: rtl;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 28px 18px 60px;
+  }
+
+  header.top {
+    margin-bottom: 22px;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding-top: 2px;
+  }
+
+  .common-due {
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  header.top .eyebrow {
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+    letter-spacing: 0.02em;
+    margin-bottom: 4px;
+  }
+
+  header.top h1 {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: 800;
+    font-size: 1.7rem;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  header.top p.sub {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: 0.94rem;
+    max-width: 46ch;
+  }
+  .page.dash-mode header.top p.sub { display: none; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+
+  .card h2 {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0 0 14px;
+  }
+
+  .card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .card-title-row h2 { margin: 0; }
+  .month-badge {
+    flex: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--water);
+    background: var(--water-tint);
+    padding: 4px 12px;
+    border-radius: 999px;
+  }
+
+  .bill-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .bill-inputs { grid-template-columns: 1fr; }
+  }
+
+  .stub {
+    border-inline-start: 4px solid var(--util-color, var(--line-strong));
+    background: var(--util-tint, var(--surface-2));
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+  .stub.water { --util-color: var(--water); --util-tint: var(--water-tint); }
+  .stub.electric { --util-color: var(--electric); --util-tint: var(--electric-tint); }
+
+  .stub label, .stub .label-static {
+    display: block;
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: var(--ink-muted);
+    margin-bottom: 4px;
+    line-height: 1.35;
+  }
+
+  .stub .amount-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .stub input[type="number"], .stub .amount-display {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: 'Cairo', Tahoma, sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--ink);
+    padding: 2px 0;
+  }
+  .stub input[type="number"]:focus { outline: none; }
+  .stub .unit { color: var(--ink-muted); font-size: 1.2rem; font-weight: 600; white-space: nowrap; }
+  .stub .amount-display.empty { color: var(--ink-muted); font-size: 1.3rem; font-weight: 700; }
+
+  .flat-rate {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--line);
+    font-size: 0.88rem;
+    color: var(--ink-muted);
+  }
+  .flat-rate strong { color: var(--ink); font-weight: 600; }
+  .flat-rate input {
+    width: 84px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    padding: 5px 8px;
+    background: var(--surface);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .apt-badge {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+  .apt-badge.ground { background: var(--ground-tint); color: var(--ground-pill); }
+  .apt-badge.up { background: var(--up-tint); color: var(--up-pill); }
+
+  button.calc {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button.calc:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
+  button.calc:active { opacity: 0.85; }
+
+  .legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+  }
+  .legend .dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-inline-end: 5px;
+  }
+  .legend .water-dot { background: var(--water); }
+  .legend .electric-dot { background: var(--electric); }
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    min-width: 0;
+  }
+
+  thead th {
+    background: var(--surface-2);
+    color: var(--ink-muted);
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-align: right;
+    padding: 14px 14px;
+    border-bottom: 1px solid var(--line-strong);
+    white-space: nowrap;
+  }
+  thead th.num { text-align: left; }
+
+  tbody td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  tbody td.num { text-align: left; font-variant-numeric: tabular-nums; }
+  tbody tr:last-of-type td { border-bottom: none; }
+
+  .apt-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+  }
+  .apt-num {
+    flex: none;
+    min-width: 30px;
+    height: 30px;
+    padding: 0 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    background: var(--surface-2);
+  }
+  .apt-num.ground { background: var(--ground-tint); color: var(--ground-pill); }
+  .apt-num.up { background: var(--up-tint); color: var(--up-pill); }
+
+  .floor-pill {
+    display: inline-block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 3px 11px;
+    border-radius: 999px;
+  }
+  .floor-pill.ground { background: var(--ground-tint); color: var(--ground-pill); }
+  .floor-pill.up { background: var(--up-tint); color: var(--up-pill); }
+
+  /* Normal on-screen sizing above; export-mode restores the larger,
+     WhatsApp-legible sizing used only while rendering the saved photo. */
+  .export-mode table { font-size: 1.28rem; min-width: 480px; }
+  .export-mode tbody td { padding: 14px 14px; }
+  .export-mode .apt-cell { font-size: 1.85rem; gap: 10px; }
+  .export-mode .apt-num { min-width: 42px; height: 42px; font-size: 1.15rem; }
+  .export-mode .floor-pill { font-size: 1.6rem; padding: 4px 16px; }
+  .export-mode td.due-cell .chip { font-size: 1.85rem; padding: 8px 18px; }
+  .export-mode tr.totals td { font-size: 1.4rem; padding-top: 16px; padding-bottom: 16px; }
+
+  td.due-cell {
+    font-weight: 800;
+  }
+  td.due-cell .chip {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: var(--due-bg);
+    color: var(--due-fg);
+    font-size: 0.95rem;
+    letter-spacing: 0.01em;
+  }
+
+  tr.totals td {
+    border-top: 2px solid var(--ink);
+    border-bottom: none;
+    background: var(--surface-2);
+    font-weight: 800;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    font-size: 1rem;
+  }
+
+  .note {
+    margin-top: 16px;
+  }
+  .tier-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 480px) {
+    .tier-grid { grid-template-columns: 1fr; }
+  }
+  .tier-box {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    background: var(--surface-2);
+  }
+  .tier-box h3 {
+    margin: 0 0 10px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tier-box h3 .dot {
+    width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+  }
+  .tier-box .ln {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.92rem;
+    color: var(--ink-muted);
+    padding: 4px 0;
+  }
+  .tier-box .ln span.v { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; margin-inline-start: 10px; }
+  .tier-box .ln.total {
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line-strong);
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 1.05rem;
+    align-items: baseline;
+  }
+  .tier-box .ln.total span.v { font-weight: 800; font-size: 1.35rem; }
+
+  .pay-note {
+    margin-top: 18px;
+    border: 1.5px solid var(--ink);
+    border-radius: 12px;
+    padding: 18px;
+    background: var(--surface-2);
+  }
+  .pay-note .pay-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin: 0 0 6px;
+  }
+  .pay-note .pay-title .warn-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--electric);
+    flex: none;
+  }
+  .pay-note .pay-sub {
+    font-size: 0.9rem;
+    color: var(--ink-muted);
+    line-height: 1.65;
+    margin: 0 0 16px;
+  }
+  .pay-note .pay-sub b { color: var(--ink); font-weight: 700; }
+  .pay-body {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+  }
+  .pay-note .barcode-slot {
+    flex: none;
+    order: 2;
+    width: 160px;
+    align-self: stretch;
+    border: 1.5px dashed var(--line-strong);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.68rem;
+    color: var(--ink-muted);
+    background: #ffffff;
+    padding: 6px;
+    line-height: 1.4;
+    overflow: hidden;
+  }
+  .pay-note .barcode-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+  .pay-details {
+    order: 1;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 9px;
+  }
+  .pay-details .prow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 8px;
+  }
+  .pay-details .prow:last-child { border-bottom: none; padding-bottom: 0; }
+  .pay-details .prow .pk {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    flex: none;
+  }
+  .pay-details .prow .pv {
+    font-weight: 700;
+    font-size: 0.98rem;
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    direction: ltr;
+    word-break: break-all;
+  }
+  @media (max-width: 460px) {
+    .pay-body { flex-direction: column; align-items: stretch; }
+    .pay-note .barcode-slot { width: 100%; height: 200px; align-self: auto; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .card, table { transition: background-color 0.2s ease; }
+  }
+
+  /* ---- Dashboard tab (v2 -- ledger-based) ---- */
+  .page.dash-mode .tabbar { margin-top: 4px; }
+  .tabbar { display:flex; gap:8px; margin: 0 0 14px; }
+  .tabbar button {
+    flex:1; padding:10px 8px; border-radius:8px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-muted); font-family:'Cairo',sans-serif;
+    font-weight:700; font-size:0.95rem; cursor:pointer;
+  }
+  .tabbar button.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .hidden-view { display:none !important; }
+
+  .dash-card { padding: 10px 16px; }
+  .dash-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
+  .dash-head h2 { margin:0; font-size:1.05rem; }
+  .dash-head .dash-sub { font-size:0.66rem; color:var(--ink-muted); font-weight:600; margin-top:1px; }
+  .dash-head .dash-due { font-size:0.66rem; color:var(--water); font-weight:700; margin-top:2px; }
+  .sync-status { font-size:0.6rem; font-weight:700; margin-top:2px; }
+  .sync-status.ok { color: var(--up-pill); }
+  .sync-status.warn { color: var(--danger); }
+  .sync-status.pending { color: var(--ink-muted); }
+  .lock-btn { border:1px solid var(--line); background:transparent; border-radius:8px; font-size:1rem; padding:3px 9px; cursor:pointer; line-height:1; flex:none; }
+  .lock-btn.unlocked { border-color: var(--up-pill); }
+
+  .dash-stats { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:4px; }
+  .dash-stats-sub { text-align:center; font-size:0.64rem; color:var(--ink-muted); margin:0 0 10px; }
+  .dstat { border:1px solid var(--line); border-radius:9px; padding:6px 9px; display:flex; flex-direction:column; gap:1px; }
+  .dstat-label { font-size:0.64rem; color:var(--ink-muted); font-weight:600; }
+  .dstat-val { font-size:1.1rem; font-weight:800; font-variant-numeric:tabular-nums; }
+  .dstat.outstanding .dstat-val { color: var(--danger); }
+  .dstat-val.good { color: var(--up-pill); }
+  .dstat-val.bad { color: var(--danger); }
+
+  .month-nav { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:5px; }
+  .month-nav button { border:none; background:transparent; font-size:1.2rem; color:var(--ink); cursor:pointer; padding:2px 8px; }
+  .month-nav span { font-weight:700; font-size:0.86rem; min-width:9ch; text-align:center; }
+  .month-bill-info { text-align:center; font-size:0.68rem; color:var(--ink-muted); margin-bottom:8px; }
+  .bill-photo-link { color: var(--water); font-weight:700; text-decoration:none; }
+  .bill-photo-missing { color: var(--ink-muted); font-size: 0.86rem; }
+
+  .pay-list { display:flex; flex-direction:column; gap:3px; margin-bottom:6px; }
+  .pay-row { display:flex; align-items:center; gap:6px; padding:2px 8px; border:1px solid var(--line); border-radius:8px; font-size:0.74rem; }
+  .pay-row .pr-name { display:flex; align-items:center; gap:5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1 1 auto; min-width:0; }
+  .pay-row .pr-name .apt-badge { width:19px; height:19px; font-size:0.62rem; flex:none; }
+  .pay-row .pr-sub { color:var(--ink-muted); font-size:0.62rem; font-variant-numeric:tabular-nums; flex:none; white-space:nowrap; }
+  .pay-pill { border:none; border-radius:999px; padding:3px 9px; font-size:0.66rem; font-weight:700; font-family:inherit; cursor:default; flex:none; white-space:nowrap; }
+  .pay-pill.paid { background: var(--up-tint); color: var(--up-pill); }
+  .pay-pill.unpaid { background: rgba(164,70,58,0.12); color: var(--danger); }
+  .pay-pill.notdue { background: var(--line); color: var(--ink-muted); }
+  .pay-pill.editable { cursor:pointer; }
+
+  .dash-actions { display:flex; gap:6px; flex-wrap:wrap; }
+  .dash-actions button { flex:1; min-width:80px; padding:6px 4px; border-radius:8px; border:1px solid var(--line-strong); background:transparent; color:var(--ink); font-family:inherit; font-weight:700; font-size:0.7rem; cursor:pointer; }
+
+  .ledger-card { padding: 6px 16px 10px; }
+  .ledger-tabbar { display:flex; gap:6px; margin: 4px 0 8px; }
+  .ledger-tabbar button {
+    flex:1; padding:7px 4px; border-radius:8px; border:1px solid var(--line);
+    background:transparent; color:var(--ink-muted); font-family:'Cairo',sans-serif;
+    font-weight:700; font-size:0.78rem; cursor:pointer;
+  }
+  .ledger-tabbar button.active { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .ledger-body { margin-bottom:6px; max-height:260px; overflow-y:auto; }
+  .ledger-body.hidden-view { display:none !important; }
+  .exp-row { display:flex; align-items:center; justify-content:space-between; gap:6px; padding:4px 0; border-bottom:1px dashed var(--line); font-size:0.72rem; }
+  .exp-row:last-child { border-bottom:none; }
+  .exp-desc { color:var(--ink-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .exp-amt { font-weight:700; font-variant-numeric:tabular-nums; flex:none; }
+  .exp-del { flex:none; border:none; background:transparent; color:var(--ink-muted); font-size:0.78rem; cursor:pointer; padding:2px 4px; line-height:1; }
+  .exp-del:hover { color: var(--danger); }
+  .exp-amt.neg { color: var(--danger); }
+  .exp-amt.pos { color: var(--up-pill); }
+  .exp-empty { color:var(--ink-muted); font-size:0.74rem; text-align:center; padding:5px 0; }
+
+  /* in-page modal (used instead of window.prompt/alert/confirm, which the
+     artifact viewer's iframe silently blocks) */
+  .modal-overlay { position:fixed; inset:0; background:rgba(10,16,17,0.5); display:flex; align-items:center; justify-content:center; z-index:100; padding:20px; box-sizing:border-box; }
+  .modal-overlay.hidden-view { display:none !important; }
+  .modal-box { background:var(--bg); border:1px solid var(--line-strong); border-radius:14px; padding:18px; width:100%; max-width:340px; max-height:85vh; overflow-y:auto; box-shadow:0 10px 30px rgba(0,0,0,0.25); }
+  .modal-box h3 { margin:0 0 12px; font-size:1rem; color:var(--ink); }
+  .modal-box p.modal-msg { font-size:0.85rem; color:var(--ink-muted); margin:0 0 14px; }
+  .modal-field { margin-bottom:10px; }
+  .modal-field label { display:block; font-size:0.76rem; color:var(--ink-muted); margin-bottom:4px; font-weight:600; }
+  .modal-field input, .modal-field select {
+    width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid var(--line-strong);
+    border-radius:8px; background:var(--bg); color:var(--ink); font-family:inherit; font-size:0.85rem;
+  }
+  .modal-error { color:var(--danger); font-size:0.76rem; margin:-2px 0 8px; min-height:1em; }
+  .modal-actions { display:flex; gap:8px; margin-top:6px; }
+  .modal-actions button { flex:1; padding:9px; border-radius:8px; border:1px solid var(--line-strong); font-family:inherit; font-weight:700; font-size:0.85rem; cursor:pointer; }
+  .admin-menu { display:flex; flex-direction:column; gap:8px; margin: 10px 0 4px; }
+  .admin-menu-btn {
+    text-align: right; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-strong);
+    background: var(--surface-2); color: var(--ink); font-family: inherit; font-weight: 700; font-size: 0.92rem; cursor: pointer;
+  }
+  .modal-actions .modal-submit { background:var(--ink); color:var(--bg); border-color:var(--ink); }
+  .modal-actions .modal-cancel { background:transparent; color:var(--ink); }
+
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="top">
+    <div class="top-row">
+      <div>
+        <div class="eyebrow">الزهور 14-2 · حساب مشترك</div>
+        <h1>قسمة فواتير المبنى</h1>
+      </div>
+      <div class="top-actions">
+        <div class="dash-due" id="dashDue">&mdash;</div>
+        <button id="adminSettingsBtn" class="lock-btn hidden-view" type="button" title="إعدادات المشرف">⚙️</button>
+        <button id="adminLockBtn" class="lock-btn" type="button" title="دخول المشرف">🔒</button>
+      </div>
+    </div>
+    <p class="sub">نصيب كل شقة من فاتورتَي المياه والكهرباء المسجَّلتين لهذا الشهر — جدول جاهز للمشاركة.</p>
+  </header>
+
+  <div class="tabbar">
+    <button id="tabBillsBtn" class="active" type="button">فواتير الشهر</button>
+    <button id="tabDashBtn" type="button">صندوق العمارة</button>
+  </div>
+
+  <div id="billsView">
+
+  <section class="card">
+    <div class="card-title-row">
+      <h2>فواتير هذا الشهر</h2>
+      <span class="month-badge" id="monthBadge"></span>
+    </div>
+    <div class="month-nav" id="billsMonthNav" style="margin-top:6px;">
+      <button id="billsPrevBtn" type="button">‹</button>
+      <span id="billsMonthLabel">&mdash;</span>
+      <button id="billsNextBtn" type="button">›</button>
+    </div>
+    <div class="bill-inputs">
+      <div class="stub water">
+        <span class="label-static">فاتورة المياه — الشركة الوطنية للمياه</span>
+        <div class="amount-row">
+          <span class="amount-display" id="waterTotal">&mdash;</span>
+          <span class="unit">ريال</span>
+        </div>
+      </div>
+      <div class="stub electric">
+        <span class="label-static">فاتورة الكهرباء — الشركة السعودية للكهرباء (مشترك)</span>
+        <div class="amount-row">
+          <span class="amount-display" id="elecTotal">&mdash;</span>
+          <span class="unit">ريال</span>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="flatRate" value="200" />
+    <div class="note" id="billsRecordNote" style="display:none;"></div>
+    <button class="calc" id="billsRecordBtn" type="button" style="display:none; margin-top:10px;">🧾 تسجيل / تعديل فاتورة هذا الشهر</button>
+  </section>
+
+  <section class="card" style="margin-top:18px;">
+    <h2>جدول قسمة فواتير العمارة</h2>
+    <div class="table-scroll">
+      <table id="resultTable">
+        <thead>
+          <tr>
+            <th>الشقة</th>
+            <th>الطابق</th>
+            <th class="num">المطلوب دفعه</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody"></tbody>
+        <tbody id="totalsBody"></tbody>
+      </table>
+    </div>
+    <div class="note" id="roundingNote"></div>
+    <div class="pay-note">
+      <p class="pay-title"><span class="warn-dot"></span>مهم: التحويل إلى حساب العمارة</p>
+      <p class="pay-sub">يُرجى تحويل المبلغ المطلوب دفعه إلى الحساب التالي فقط (باسم <b>عدنان طارق الغصين</b>) — وليس لأي حساب شخصي آخر. يمكن مسح الباركود لإتمام التحويل مباشرة.</p>
+      <div class="pay-body">
+        <div class="barcode-slot" id="barcodeSlot"><img src="data:image/png;base64,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" alt="رمز الاستجابة السريعة للتحويل البنكي" /></div>
+        <div class="pay-details">
+          <div class="prow"><span class="pk">الاسم</span><span class="pv" style="direction:rtl;">عدنان طارق الغصين</span></div>
+          <div class="prow"><span class="pk">رقم الحساب</span><span class="pv">07703011 0006086231767</span></div>
+          <div class="prow"><span class="pk">رقم الآيبان (IBAN)</span><span class="pv">SA67 8000 0858 6081 1623 1767</span></div>
+          <div class="prow"><span class="pk">كود سويفت (SWIFT)</span><span class="pv">RJHISARI</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <button class="calc" id="savePhotoBtn" type="button" style="margin-top:14px;">📷 حفظ صورة الفاتورة</button>
+  <div class="note" id="savePhotoStatus" style="text-align:center;"></div>
+
+  </div>
+
+  <div id="dashboardView" class="hidden-view">
+    <section class="card dash-card">
+      <div class="dash-head">
+        <div>
+          <div class="dash-sub" id="dashAsOf">&mdash;</div>
+          <div class="sync-status" id="syncStatus"></div>
+        </div>
+      </div>
+      <div class="dash-stats">
+        <div class="dstat"><span class="dstat-label">الرصيد الفعلي</span><span class="dstat-val" id="fundBalance">&mdash;</span></div>
+        <div class="dstat"><span class="dstat-label">الرصيد المتوقع (لو تحصّلت كل المتأخرات)</span><span class="dstat-val" id="fundExpected">&mdash;</span></div>
+        <div class="dstat"><span class="dstat-label">تحصيل هذا الشهر</span><span class="dstat-val" id="fundRate">&mdash;</span></div>
+        <div class="dstat outstanding"><span class="dstat-label">إجمالي المتأخرات (حتى اليوم)</span><span class="dstat-val" id="fundOutstanding">&mdash;</span></div>
+      </div>
+      <div class="dash-stats-sub" id="dashStatsSub">&mdash;</div>
+      <div class="month-nav">
+        <button id="monthPrevBtn" type="button">‹</button>
+        <span id="dashMonthLabel">&mdash;</span>
+        <button id="monthNextBtn" type="button">›</button>
+      </div>
+      <div class="month-bill-info" id="monthBillInfo"></div>
+      <div class="pay-list" id="payList"></div>
+      <div class="dash-actions" id="dashActions"></div>
+    </section>
+    <section class="card dash-card ledger-card" id="ledgerCard">
+      <div class="ledger-tabbar">
+        <button type="button" class="active" id="ledgerIncomeTabBtn">سجل المدفوعات</button>
+        <button type="button" id="ledgerSpendTabBtn">سجل المصاريف</button>
+      </div>
+      <div id="incomeLog" class="ledger-body"></div>
+      <div id="spendLog" class="ledger-body hidden-view"></div>
+    </section>
+    <script type="application/json" id="fundStateData"></script>
+
+    <div class="modal-overlay hidden-view" id="modalOverlay">
+      <div class="modal-box" id="modalBox"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+(function () {
+  var ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function todayMonthKeyLocal() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1); }
+  function keyToYMLocal(key) { var p = key.split('-'); return { y: parseInt(p[0], 10), m: parseInt(p[1], 10) - 1 }; }
+  function addMonthsLocal(key, delta) {
+    var ym = keyToYMLocal(key);
+    var total = ym.y * 12 + ym.m + delta;
+    var y = Math.floor(total / 12), m = ((total % 12) + 12) % 12;
+    return y + '-' + pad2(m + 1);
+  }
+  function monthLabelLocal(key) {
+    var ym = keyToYMLocal(key);
+    return ARABIC_MONTHS[ym.m] + ' ' + ym.y;
+  }
+  var billsAsOf = todayMonthKeyLocal();
+
+  var APARTMENTS = [1,2,3,4,5,6,7];
+  var GROUND = [1,2];
+  // Fallback labels only, shown before the first Supabase fetch resolves or
+  // if an apartment has no name set. The real, editable names live in
+  // apartments.name (Supabase) and are changed only via the centralized
+  // Admin Settings panel -- there is no per-browser/local name storage
+  // anymore, so a name change is instantly the same for every viewer.
+  var DEFAULT_NAMES = {
+    1: 'أبو قصي',
+    2: 'أبو أسامة',
+    3: 'أم فيصل',
+    4: 'أبو الريم',
+    5: 'أبو عمر',
+    6: 'أبو طارق',
+    7: 'أبو لمار'
+  };
+
+  function isGround(apt) { return GROUND.indexOf(apt) !== -1; }
+
+  function displayName(apt) {
+    // NOTE: this script block runs independently of the dashboard script
+    // further down the page (separate <script> tags = separate closures),
+    // so it cannot see that script's local `state` variable directly.
+    // window.__fundNames is a small bridge the dashboard script keeps
+    // updated with the live, server-synced names; until that script has
+    // loaded (or if a name was never set), fall back to the defaults.
+    var synced = window.__fundNames && window.__fundNames[apt];
+    return (synced && synced.trim()) ? synced : (DEFAULT_NAMES[apt] || ('شقة ' + apt));
+  }
+
+  // The separate "أسماء السكان" names list was removed -- the results table
+  // right below already shows every apartment's name next to its amount, so
+  // a standalone names list was pure redundancy.
+  window.__fundDisplayName = displayName;
+
+  var RIYAL = '﷼';
+
+  function fmt(n) {
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtDue(n) {
+    return fmt(n) + ' ' + RIYAL;
+  }
+
+  // Round a SAR amount UP to the nearest halala (0.01), returned as an integer
+  // halala count. Rounding is always up so the amounts collected never fall
+  // short of the real bill.
+  function ceilHalalas(amountSar) {
+    return Math.ceil(amountSar * 100 - 1e-9);
+  }
+
+  function calculate() {
+    // This tab is a pure DISPLAY of the officially recorded bill for the
+    // browsed month -- there is nothing to type in. The only way a bill
+    // ever becomes official is the admin-only "تسجيل / تعديل فاتورة" button
+    // below (visible only when unlocked), which writes through
+    // admin_record_bill on the server. Any of the 7 neighbors can freely
+    // browse past months here without risking changing anything.
+    var labelEl = document.getElementById('billsMonthLabel');
+    if (labelEl) labelEl.textContent = monthLabelLocal(billsAsOf);
+    var badgeEl = document.getElementById('monthBadge');
+    if (badgeEl) badgeEl.textContent = monthLabelLocal(billsAsOf);
+    var nextBtnEl = document.getElementById('billsNextBtn');
+    if (nextBtnEl) {
+      var atLatest = billsAsOf >= todayMonthKeyLocal();
+      nextBtnEl.disabled = atLatest;
+      nextBtnEl.style.opacity = atLatest ? '0.35' : '1';
+      nextBtnEl.style.cursor = atLatest ? 'default' : 'pointer';
+    }
+
+    var recordBtn = document.getElementById('billsRecordBtn');
+    if (recordBtn) recordBtn.style.display = window.__fundUnlocked ? 'block' : 'none';
+
+    var bill = (window.__fundBillHistory || {})[billsAsOf];
+    var waterEl = document.getElementById('waterTotal');
+    var elecEl = document.getElementById('elecTotal');
+    var recordNote = document.getElementById('billsRecordNote');
+
+    if (!bill) {
+      if (waterEl) { waterEl.textContent = '—'; waterEl.classList.add('empty'); }
+      if (elecEl) { elecEl.textContent = '—'; elecEl.classList.add('empty'); }
+      var rb = document.getElementById('resultBody'); if (rb) rb.innerHTML = '';
+      var tb = document.getElementById('totalsBody'); if (tb) tb.innerHTML = '';
+      var rn = document.getElementById('roundingNote'); if (rn) rn.innerHTML = '';
+      if (recordNote) {
+        recordNote.style.display = 'block';
+        recordNote.textContent = window.__fundUnlocked
+          ? ('لم تُسجَّل فاتورة ' + monthLabelLocal(billsAsOf) + ' بعد — استخدم الزر أدناه لتسجيلها.')
+          : ('لم تُسجَّل فاتورة ' + monthLabelLocal(billsAsOf) + ' بعد.');
+      }
+      return;
+    }
+    if (recordNote) recordNote.style.display = 'none';
+
+    var waterTotal = parseFloat(bill.water) || 0;
+    var elecTotal = parseFloat(bill.elec) || 0;
+    if (waterEl) { waterEl.textContent = fmt(waterTotal); waterEl.classList.remove('empty'); }
+    if (elecEl) { elecEl.textContent = fmt(elecTotal); elecEl.classList.remove('empty'); }
+    var flatRate = parseFloat(document.getElementById('flatRate').value) || 0;
+
+    // Every apartment pays the SAME water halalas, and every apartment within
+    // a floor tier pays the SAME electricity halalas — no per-apartment
+    // rounding differences, so no two neighbors in the same tier ever see a
+    // different number.
+    //
+    // Ground and upstairs electricity shares are rounded up INDEPENDENTLY
+    // from their own true value (ground = elecTotal/12, upstairs = double
+    // that) rather than by doubling the already-rounded ground figure —
+    // doubling first would give the wrong halala (e.g. 6.53 x 2 = 13.06
+    // when the true upstairs value of 13.045 should round up to 13.05).
+    // Because each is rounded independently, "upstairs = exactly double
+    // ground" can be off by a single halala after rounding; that halala is
+    // simply absorbed into the ground share (they already pay less overall).
+    var waterCentsEach = ceilHalalas(waterTotal / 7);
+    var groundElecExact = elecTotal / 12;
+    var upElecCents = ceilHalalas(groundElecExact * 2);
+    var groundElecCents = ceilHalalas(groundElecExact);
+
+    var rows = APARTMENTS.map(function (apt) {
+      var ground = isGround(apt);
+      var elecCents = ground ? groundElecCents : upElecCents;
+      var computedCents = waterCentsEach + elecCents;
+      var dueCents = ground ? computedCents : Math.round(flatRate * 100);
+      return {
+        apt: apt,
+        name: displayName(apt).trim(),
+        ground: ground,
+        water: waterCentsEach / 100,
+        elec: elecCents / 100,
+        computed: computedCents / 100,
+        due: dueCents / 100
+      };
+    });
+
+    var collected = {
+      water: rows.reduce(function (a, r) { return a + r.water; }, 0),
+      elec: rows.reduce(function (a, r) { return a + r.elec; }, 0)
+    };
+
+    renderTable(rows);
+    renderNote(rows, waterTotal, elecTotal, collected, flatRate);
+  }
+
+  function renderTable(rows) {
+    var body = document.getElementById('resultBody');
+    body.innerHTML = '';
+    rows.forEach(function (r) {
+      var tr = document.createElement('tr');
+      var label = r.name ? r.name : ('شقة رقم ' + r.apt);
+      tr.innerHTML =
+        '<td><span class="apt-cell"><span class="apt-num ' + (r.ground ? 'ground' : 'up') + '">' + r.apt + '</span>' + label + '</span></td>' +
+        '<td><span class="floor-pill ' + (r.ground ? 'ground' : 'up') + '">' + (r.ground ? 'أرضي' : 'علوي') + '</span></td>' +
+        '<td class="num due-cell"><span class="chip">' + fmtDue(r.due) + '</span></td>';
+      body.appendChild(tr);
+    });
+
+    var due = rows.reduce(function (a, r) { return a + r.due; }, 0);
+    var totalsBody = document.getElementById('totalsBody');
+    totalsBody.innerHTML =
+      '<tr class="totals">' +
+      '<td colspan="2">الإجمالي المُحصَّل</td>' +
+      '<td class="num">' + fmtDue(due) + '</td>' +
+      '</tr>';
+  }
+
+  function renderNote(rows, waterTotal, elecTotal, collected, flatRate) {
+    var ground = rows.filter(function (r) { return r.ground; })[0];
+    var up = rows.filter(function (r) { return !r.ground; })[0];
+    var el = document.getElementById('roundingNote');
+
+    var html = '<div class="tier-grid">';
+    html += tierBoxHtml('شقة أرضية', 'ground', ground, false);
+    html += tierBoxHtml('شقة علوية', 'up', up, true, flatRate);
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function tierBoxHtml(title, cls, r, isUp, flatRate) {
+    var dotVar = 'var(--' + (cls === 'ground' ? 'ground-pill' : 'up-pill') + ')';
+    var out = '<div class="tier-box ' + cls + '">';
+    out += '<h3><span class="dot" style="background:' + dotVar + '"></span>' + title + '</h3>';
+    out += '<div class="ln"><span>نصيب المياه</span><span class="v">' + fmt(r.water) + ' ريال</span></div>';
+    out += '<div class="ln"><span>نصيب الكهرباء</span><span class="v">' + fmt(r.elec) + ' ريال</span></div>';
+    if (isUp) {
+      out += '<div class="ln"><span>الإجمالي المحسوب (مرجعي)</span><span class="v">' + fmt(r.computed) + ' ريال</span></div>';
+      out += '<div class="ln total"><span>المطلوب فعليًا</span><span class="v">' + fmtDue(r.due) + '</span></div>';
+    } else {
+      out += '<div class="ln total"><span>المطلوب دفعه</span><span class="v">' + fmtDue(r.due) + '</span></div>';
+    }
+    out += '</div>';
+    return out;
+  }
+
+  var billsPrevBtn = document.getElementById('billsPrevBtn');
+  var billsNextBtn = document.getElementById('billsNextBtn');
+  if (billsPrevBtn) billsPrevBtn.addEventListener('click', function () { billsAsOf = addMonthsLocal(billsAsOf, -1); calculate(); });
+  if (billsNextBtn) billsNextBtn.addEventListener('click', function () {
+    var next = addMonthsLocal(billsAsOf, 1);
+    if (next > todayMonthKeyLocal()) return; // no data exists yet for unpublished future months
+    billsAsOf = next; calculate();
+  });
+  var billsRecordBtn = document.getElementById('billsRecordBtn');
+  if (billsRecordBtn) billsRecordBtn.addEventListener('click', function () {
+    if (window.__fundRecordBillFlow) window.__fundRecordBillFlow(billsAsOf);
+  });
+  window.__fundRecalcBills = calculate;
+
+  // Save-as-photo: temporarily switch the results card into the larger,
+  // WhatsApp-legible "export-mode" sizing, render it to a PNG with
+  // html2canvas, then restore the normal on-screen sizing. Available to
+  // every viewer (not admin-gated) since any of the 7 neighbors may want
+  // to save/forward their own copy of the bill.
+  //
+  // The old version always used a programmatic <a download> click. That is
+  // unreliable on phones -- iOS Safari in particular does not honor the
+  // download attribute the way desktop browsers do, so on mobile it could
+  // silently do nothing. This version tries three paths in order and
+  // reports plainly which one happened instead of a generic failure:
+  //   1) Web Share API with a real file -- opens the native share sheet
+  //      (has a direct "Save Image"/"Save to Photos" option), the most
+  //      reliable path on phones.
+  //   2) <a download> -- works well on desktop browsers.
+  //   3) Show the image inline on the page with "press and hold to save"
+  //      instructions -- guaranteed to work everywhere, since it's just a
+  //      normal <img> the browser already rendered.
+  var savePhotoBtn = document.getElementById('savePhotoBtn');
+  if (savePhotoBtn) {
+    savePhotoBtn.addEventListener('click', function () {
+      var card = document.getElementById('resultTable') && document.getElementById('resultTable').closest('.card');
+      var status = document.getElementById('savePhotoStatus');
+      if (!card || typeof html2canvas !== 'function') {
+        if (status) status.textContent = 'تعذّر إنشاء الصورة (فشل تحميل أداة التصوير) — تأكد من الاتصال بالإنترنت وحاول مرة أخرى';
+        return;
+      }
+      savePhotoBtn.disabled = true;
+      if (status) status.textContent = 'جارٍ إنشاء الصورة...';
+      card.classList.add('export-mode');
+      var bg = getComputedStyle(document.body).getPropertyValue('--bg') || '#eef2f1';
+      html2canvas(card, { backgroundColor: bg.trim(), scale: 2 }).then(function (canvas) {
+        card.classList.remove('export-mode');
+        savePhotoBtn.disabled = false;
+        var monthEl = document.getElementById('monthBadge');
+        var namePart = monthEl ? monthEl.textContent.replace(/\s+/g, '-') : 'شهري';
+        var fileName = 'قسمة-فواتير-' + namePart + '.png';
+
+        canvas.toBlob(function (blob) {
+          if (!blob) {
+            if (status) status.textContent = 'تعذّر إنشاء الصورة — حاول مرة أخرى';
+            return;
+          }
+          var file = null;
+          try { file = new File([blob], fileName, { type: 'image/png' }); } catch (e) { /* older browsers */ }
+
+          if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: fileName }).then(function () {
+              if (status) status.textContent = 'تم ✓';
+              setTimeout(function () { if (status) status.textContent = ''; }, 3500);
+            }).catch(function (err) {
+              // AbortError just means the user closed the share sheet without picking anything -- not a failure.
+              if (err && err.name === 'AbortError') { if (status) status.textContent = ''; return; }
+              showImageFallback(canvas, status);
+            });
+            return;
+          }
+
+          try {
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.download = fileName;
+            link.href = url;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+            if (status) status.textContent = 'تم حفظ الصورة ✓ (تحقق من مجلد التنزيلات)';
+            setTimeout(function () { if (status) status.textContent = ''; }, 4500);
+          } catch (e2) {
+            showImageFallback(canvas, status);
+          }
+        }, 'image/png');
+      }).catch(function () {
+        card.classList.remove('export-mode');
+        savePhotoBtn.disabled = false;
+        if (status) status.textContent = 'تعذّر إنشاء الصورة — حاول مرة أخرى';
+      });
+    });
+  }
+
+  // Last-resort fallback: show the rendered PNG directly on the page as a
+  // normal <img> the user can press-and-hold (or right-click) to save --
+  // this always works since it doesn't depend on any download/share API.
+  function showImageFallback(canvas, status) {
+    if (status) status.textContent = 'اضغط مطوّلًا على الصورة أدناه لحفظها';
+    var existing = document.getElementById('savePhotoFallback');
+    if (existing) existing.remove();
+    var wrap = document.createElement('div');
+    wrap.id = 'savePhotoFallback';
+    wrap.style.cssText = 'margin-top:10px;text-align:center;';
+    var img = document.createElement('img');
+    img.src = canvas.toDataURL('image/png');
+    img.style.cssText = 'max-width:100%;border-radius:10px;border:1px solid var(--line);';
+    wrap.appendChild(img);
+    var savePhotoStatusEl = document.getElementById('savePhotoStatus');
+    if (savePhotoStatusEl && savePhotoStatusEl.parentNode) {
+      savePhotoStatusEl.parentNode.insertBefore(wrap, savePhotoStatusEl.nextSibling);
+    }
+  }
+
+  calculate();
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.min.js"></script>
+<script>
+(function () {
+  var RIYAL = '﷼';
+  var ARABIC_MONTHS = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  var ARABIC_MONTHS_SET = {};
+  ARABIC_MONTHS.forEach(function (m, i) { ARABIC_MONTHS_SET[m] = i; });
+  var GROUND = [1, 2];
+  function isGroundApt(apt) { return GROUND.indexOf(apt) !== -1; }
+
+  function fmt(n) {
+    var v = Math.round((parseFloat(n) || 0) * 100) / 100;
+    return v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtR(n) { return fmt(n) + ' ' + RIYAL; }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function monthKey(y, m) { return y + '-' + pad2(m + 1); }
+  function keyToYM(key) { var p = key.split('-'); return { y: parseInt(p[0], 10), m: parseInt(p[1], 10) - 1 }; }
+  function monthLabel(key) { var ym = keyToYM(key); return ARABIC_MONTHS[ym.m] + ' ' + ym.y; }
+  function addMonths(key, delta) {
+    var ym = keyToYM(key);
+    var total = ym.y * 12 + ym.m + delta;
+    var y = Math.floor(total / 12), m = ((total % 12) + 12) % 12;
+    return monthKey(y, m);
+  }
+  function todayKey() { var d = new Date(); return monthKey(d.getFullYear(), d.getMonth()); }
+  function todayDateStr() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function parseArabicMonthLabelToKey(label) {
+    if (!label) return null;
+    var parts = String(label).trim().split(/\s+/);
+    if (parts.length < 2) return null;
+    var idx = ARABIC_MONTHS_SET[parts[0]];
+    var year = parseInt(parts[1], 10);
+    if (idx == null || !year) return null;
+    return monthKey(year, idx);
+  }
+
+  // ---- Supabase -----------------------------------------------------
+  var SUPABASE_URL = 'https://hltdvzyocdpxhwlofmwu.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_ScUTbZ1S39pfw8IHmeYZjQ_XAtIi3Kx';
+  // auth: {} options disable GoTrueClient's cross-tab session machinery -- this
+  // app never uses Supabase Auth (admin identity is a plain RPC session token,
+  // not a Supabase Auth session), and that unused machinery is what was
+  // crashing with "DataCloneError: Headers object could not be cloned" on
+  // some browsers/webviews (a known supabase-js multi-tab lock bug).
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+  });
+
+  var STATE_KEY_LOCAL = 'building-fund-state-v4';
+  function loadLocalState() {
+    try {
+      var raw = localStorage.getItem(STATE_KEY_LOCAL);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function saveLocalState(s) {
+    try { localStorage.setItem(STATE_KEY_LOCAL, JSON.stringify(s)); } catch (e) {}
+  }
+
+  function getAptName(apt) {
+    // Bridge into the bills-tab script's displayName (separate <script>
+    // closure, see the matching note there) -- falls back to a plain label
+    // in the brief window before that script has attached the bridge.
+    return window.__fundDisplayName ? window.__fundDisplayName(apt) : ('شقة ' + apt);
+  }
+
+  var state = null;
+  var initialLoadDone = false;
+  var currentAsOf = todayKey();
+  var sessionToken = null;
+  try { sessionToken = sessionStorage.getItem('adminSessionToken') || null; } catch (e) {}
+  var unlocked = !!sessionToken;
+
+  function setSyncStatus(kind, text) {
+    var el = document.getElementById('syncStatus');
+    if (!el) return;
+    el.className = 'sync-status' + (kind ? ' ' + kind : '');
+    el.textContent = text || '';
+  }
+
+  // Single read path: reassembles the exact same in-memory `state` shape the
+  // rest of this file already works with (settings/names/income/spendings/
+  // billHistory) from the six public tables, so every calculation function
+  // below is completely untouched by the move to Supabase.
+  function loadFromSupabase() {
+    return Promise.all([
+      sb.from('apartments').select('*').order('id'),
+      sb.from('settings').select('*').limit(1).maybeSingle(),
+      sb.from('fee_schedule').select('*'),
+      sb.from('bill_history').select('*'),
+      sb.from('income').select('*'),
+      sb.from('spendings').select('*'),
+      sb.rpc('admin_has_pin')
+    ]).then(function (results) {
+      var errs = results.filter(function (r) { return r && r.error; });
+      if (errs.length) throw errs[0].error;
+      var apts = results[0].data || [];
+      var settingsRow = results[1].data || {};
+      var feeRows = results[2].data || [];
+      var billRows = results[3].data || [];
+      var incRows = results[4].data || [];
+      var spRows = results[5].data || [];
+      var hasPin = !!results[6].data;
+
+      var names = {}, activeApartments = [];
+      apts.forEach(function (a) { names[a.id] = a.name; if (a.is_active) activeApartments.push(a.id); });
+      activeApartments.sort(function (a, b) { return a - b; });
+
+      var feeHistory = [], groundFeeHistory = [];
+      feeRows.forEach(function (r) {
+        var entry = { from: r.effective_month.slice(0, 7), amount: parseFloat(r.amount) };
+        if (r.kind === 'upstairs_fixed') feeHistory.push(entry); else groundFeeHistory.push(entry);
+      });
+
+      var billHistory = {};
+      billRows.forEach(function (r) { billHistory[r.month.slice(0, 7)] = { water: parseFloat(r.water), elec: parseFloat(r.elec), photoUrl: r.photo_url || null }; });
+
+      var income = incRows.map(function (r) {
+        return { id: r.id, date: r.pay_date, apt: r.apt, amount: parseFloat(r.amount), forMonth: r.for_month.slice(0, 7), method: r.method };
+      });
+      var spendings = spRows.map(function (r) {
+        return { id: r.id, date: r.spend_date, desc: r.description, category: r.category, amount: parseFloat(r.amount), forMonth: r.for_month.slice(0, 7) };
+      });
+
+      state = {
+        settings: {
+          openingBalance: parseFloat(settingsRow.opening_balance) || 0,
+          dueDay: settingsRow.due_day || 28,
+          startMonth: settingsRow.start_month ? settingsRow.start_month.slice(0, 7) : '2026-03',
+          activeApartments: activeApartments,
+          cleaningRate: parseFloat(settingsRow.cleaning_rate) || 150,
+          groundFeeHistory: groundFeeHistory,
+          feeHistory: feeHistory
+        },
+        names: names,
+        income: income,
+        spendings: spendings,
+        billHistory: billHistory,
+        hasPin: hasPin
+      };
+      saveLocalState(state);
+      window.__fundNames = state.names;
+      window.__fundBillHistory = state.billHistory;
+      initialLoadDone = true;
+      setSyncStatus('ok', 'متصل — محدَّث الآن');
+      return state;
+    }).catch(function (err) {
+      setSyncStatus('warn', 'غير متصل (' + ((err && err.message) || 'خطأ') + ')');
+      throw err;
+    });
+  }
+
+  function updateCommonDue() {
+    var dueEl = document.getElementById('dashDue');
+    if (dueEl && state) dueEl.textContent = 'موعد الاستحقاق: يوم ' + (state.settings.dueDay || 28) + ' من كل شهر';
+  }
+
+  function refreshAndRender() {
+    return loadFromSupabase().then(function () {
+      updateCommonDue();
+      if (window.__fundRecalcBills) window.__fundRecalcBills();
+      if (dashView && !dashView.classList.contains('hidden-view')) renderDashboard();
+    }).catch(function () {});
+  }
+
+  // ---- money model ----------------------------------------------------
+  function ceilHalalasLocal(amountSar) { return Math.ceil(amountSar * 100 - 1e-9); }
+  function groundDueFromBill(key) {
+    var bill = (state.billHistory || {})[key];
+    if (!bill) return null;
+    var waterEach = ceilHalalasLocal((parseFloat(bill.water) || 0) / 7) / 100;
+    var groundElec = ceilHalalasLocal((parseFloat(bill.elec) || 0) / 12) / 100;
+    return waterEach + groundElec;
+  }
+  function feeFromHistory(history, key) {
+    var hist = (history || []).slice().sort(function (a, b) { return a.from < b.from ? -1 : 1; });
+    var fee = hist.length ? hist[0].amount : 0;
+    hist.forEach(function (h) { if (h.from <= key) fee = h.amount; });
+    return fee;
+  }
+  function getFeeForMonth(apt, key) {
+    if (isGroundApt(apt)) {
+      var fromBill = groundDueFromBill(key);
+      return fromBill != null ? fromBill : feeFromHistory(state.settings.groundFeeHistory, key);
+    }
+    return feeFromHistory(state.settings.feeHistory, key);
+  }
+
+  function isMonthDue(key) {
+    var real = todayKey();
+    if (key < real) return true;
+    if (key > real) return false;
+    var d = new Date();
+    return d.getDate() >= (state.settings.dueDay || 28);
+  }
+
+  function monthsRange(startKey, endKey) {
+    var out = [], k = startKey, guard = 0;
+    while (k <= endKey && guard < 240) { out.push(k); k = addMonths(k, 1); guard++; }
+    return out;
+  }
+
+  function paidForMonth(apt, key) {
+    return state.income.filter(function (e) { return e.apt === apt && e.forMonth === key; })
+      .reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0);
+  }
+
+  function monthStatus(apt, key) {
+    var fee = getFeeForMonth(apt, key);
+    if (fee <= 0) return 'nofee';
+    var paid = paidForMonth(apt, key);
+    if (paid >= fee) return 'paid';
+    if (!isMonthDue(key)) return 'notdue';
+    if (paid > 0) return 'partial';
+    return 'late';
+  }
+
+  // startKeyOverride lets a caller scope the sums to a custom window instead of the
+  // full history since state.settings.startMonth -- e.g. passing the same month as
+  // both asOfKey and startKeyOverride gives single-month-only stats (monthsRange then
+  // returns just that one month), and passing this calendar year's January gives a
+  // year-to-date figure. Used to separate "this month" / "since the fund began" /
+  // "since Jan 1" readings that previously all collapsed into one ambiguous number.
+  function aptStats(apt, asOfKey, startKeyOverride) {
+    var months = monthsRange(startKeyOverride || state.settings.startMonth, asOfKey);
+    var expected = 0, collected = 0, overdueMonths = 0, statusThisMonth = 'notdue';
+    months.forEach(function (key) {
+      var fee = getFeeForMonth(apt, key);
+      var status = monthStatus(apt, key);
+      var resolved = (status === 'paid' || status === 'partial' || status === 'late');
+      if (resolved) {
+        expected += fee;
+        collected += Math.min(paidForMonth(apt, key), fee);
+      }
+      if (status === 'late') overdueMonths++;
+      if (key === asOfKey) statusThisMonth = status;
+    });
+    var totalPaid = state.income.filter(function (e) { return e.apt === apt; })
+      .reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0);
+    var remaining = Math.max(0, expected - collected);
+    var lastPaymentDate = null;
+    state.income.filter(function (e) { return e.apt === apt; }).forEach(function (e) {
+      if (!lastPaymentDate || e.date > lastPaymentDate) lastPaymentDate = e.date;
+    });
+    var pct = expected > 0 ? Math.round((collected / expected) * 100) : 100;
+    return { expected: expected, collected: collected, totalPaid: totalPaid, remaining: remaining, overdueMonths: overdueMonths, lastPaymentDate: lastPaymentDate, pct: pct, statusThisMonth: statusThisMonth };
+  }
+
+  function computeGlobal(asOfKey, startKeyOverride) {
+    var apts = state.settings.activeApartments;
+    // balance is the real ledger total (opening + all income - all spending) -- always
+    // all-time, never scoped by asOfKey/startKeyOverride, since it's the actual bank
+    // balance regardless of which month is being browsed.
+    var balance = (parseFloat(state.settings.openingBalance) || 0)
+      + state.income.reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0)
+      - state.spendings.reduce(function (a, e) { return a + (parseFloat(e.amount) || 0); }, 0);
+    var expected = 0, collected = 0, outstanding = 0, perApt = {};
+    apts.forEach(function (apt) {
+      var s = aptStats(apt, asOfKey, startKeyOverride);
+      perApt[apt] = s;
+      expected += s.expected; collected += s.totalPaid > s.expected ? s.expected : s.collected; outstanding += s.remaining;
+    });
+    var rate = expected > 0 ? Math.round((collected / expected) * 100) : 100;
+    return { balance: balance, expected: expected, collected: collected, outstanding: outstanding, rate: rate, perApt: perApt };
+  }
+
+  function yearStartKey(key) {
+    return key.slice(0, 4) + '-01';
+  }
+
+  // ---- in-page modal ----------------------------------------------------
+  function closeModal() {
+    var overlay = document.getElementById('modalOverlay');
+    if (overlay) overlay.classList.add('hidden-view');
+  }
+
+  function showModal(opts) {
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+    if (!overlay || !box) return;
+    var html = '<h3>' + opts.title + '</h3>';
+    (opts.fields || []).forEach(function (f) {
+      html += '<div class="modal-field"><label>' + f.label + '</label>';
+      if (f.type === 'select') {
+        html += '<select id="mf_' + f.key + '">' + (f.options || []).map(function (o) {
+          return '<option value="' + o + '"' + (o === f.value ? ' selected' : '') + '>' + o + '</option>';
+        }).join('') + '</select>';
+      } else if (f.type === 'file') {
+        html += '<input type="file" id="mf_' + f.key + '" accept="image/*" />';
+      } else {
+        html += '<input type="' + (f.type === 'number' ? 'number' : (f.type === 'password' ? 'password' : 'text')) +
+          '" id="mf_' + f.key + '" value="' + (f.value != null ? f.value : '') + '"' +
+          (f.type === 'number' ? ' inputmode="decimal"' : '') +
+          (f.type === 'password' ? ' inputmode="numeric" autocomplete="off"' : '') + ' />';
+      }
+      html += '</div>';
+    });
+    html += '<div class="modal-error" id="modalError"></div>';
+    html += '<div class="modal-actions"><button type="button" class="modal-cancel" id="modalCancelBtn">إلغاء</button><button type="button" class="modal-submit" id="modalSubmitBtn">' + (opts.submitLabel || 'حفظ') + '</button></div>';
+    box.innerHTML = html;
+    overlay.classList.remove('hidden-view');
+    if (opts.onFieldChange) {
+      (opts.fields || []).forEach(function (f) {
+        if (f.type !== 'select') return;
+        var elSel = document.getElementById('mf_' + f.key);
+        if (elSel) elSel.addEventListener('change', function () { opts.onFieldChange(f.key, elSel.value); });
+      });
+    }
+    document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('modalSubmitBtn').addEventListener('click', function (ev) {
+      var btn = ev.currentTarget;
+      if (btn.disabled) return;
+      btn.disabled = true;
+      var values = {};
+      (opts.fields || []).forEach(function (f) {
+        var el = document.getElementById('mf_' + f.key);
+        if (f.type === 'file') {
+          values[f.key] = (el && el.files && el.files[0]) ? el.files[0] : null;
+        } else {
+          values[f.key] = el ? el.value : '';
+        }
+      });
+      var setError = function (msg) {
+        var e = document.getElementById('modalError');
+        if (e) e.textContent = msg || '';
+        btn.disabled = false;
+      };
+      opts.onSubmit(values, setError, closeModal);
+    });
+  }
+
+  function showConfirm(title, message, onYes) {
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+    if (!overlay || !box) return;
+    box.innerHTML = '<h3>' + title + '</h3><p class="modal-msg">' + message + '</p>' +
+      '<div class="modal-actions"><button type="button" class="modal-cancel" id="modalCancelBtn">إلغاء</button><button type="button" class="modal-submit" id="modalSubmitBtn">تأكيد</button></div>';
+    overlay.classList.remove('hidden-view');
+    document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('modalSubmitBtn').addEventListener('click', function (ev) {
+      if (ev.currentTarget.disabled) return;
+      ev.currentTarget.disabled = true;
+      closeModal();
+      onYes();
+    });
+  }
+
+  function friendlyRpcError(err, fallback) {
+    var msg = (err && err.message) || '';
+    if (msg.indexOf('wrong_pin') !== -1) return 'رمز غير صحيح';
+    if (msg.indexOf('locked') !== -1) return 'محاولات كثيرة خاطئة — حاول لاحقًا';
+    if (msg.indexOf('no_pin_set') !== -1) return 'لم يتم تعيين رمز بعد';
+    if (msg.indexOf('pin_already_set') !== -1) return 'تم تعيين رمز مسبقًا';
+    if (msg.indexOf('not_authorized') !== -1) return 'انتهت صلاحية الجلسة — أعد الدخول';
+    return fallback || 'حدث خطأ، حاول مرة أخرى';
+  }
+
+  // ---- admin actions --------------------------------------------------
+  function addPaymentFlow(presetApt) {
+    var defaultApt = presetApt || state.settings.activeApartments.filter(function (a) { return !isGroundApt(a); })[0] || state.settings.activeApartments[0];
+    showModal({
+      title: 'تسجيل دفعة',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'apt', label: 'رقم الشقة (1 إلى 7)', type: 'number', value: defaultApt },
+        { key: 'amount', label: 'المبلغ (ريال)', type: 'number', value: getFeeForMonth(defaultApt, currentAsOf) || '' },
+        { key: 'forMonth', label: 'عن أي شهر؟', type: 'text', value: monthLabel(currentAsOf) }
+      ],
+      onSubmit: function (values, setError, close) {
+        var apt = parseInt(values.apt, 10);
+        if (state.settings.activeApartments.indexOf(apt) === -1) { setError('رقم شقة غير صالح'); return; }
+        var amount = parseFloat(values.amount);
+        if (!amount || amount <= 0) { setError('أدخل مبلغًا صحيحًا'); return; }
+        var key = parseArabicMonthLabelToKey(values.forMonth) || currentAsOf;
+        sb.rpc('admin_add_income', { p_token: sessionToken, p_apt: apt, p_amount: amount, p_pay_date: todayDateStr(), p_for_month: key + '-01', p_method: 'يدوي' }).then(function (res) {
+          if (res.error) { setError(friendlyRpcError(res.error)); return; }
+          close();
+          refreshAndRender();
+        });
+      }
+    });
+  }
+
+  function addSpendingFlow(presetDesc, presetAmount, presetCategory) {
+    showModal({
+      title: 'تسجيل مصروف',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'amount', label: 'المبلغ (ريال)', type: 'number', value: presetAmount != null ? presetAmount : '' },
+        { key: 'desc', label: 'الوصف', type: 'text', value: presetDesc || '' },
+        { key: 'category', label: 'التصنيف', type: 'select', options: ['تنظيف', 'فواتير', 'صيانة', 'أخرى'], value: presetCategory || 'أخرى' }
+      ],
+      onFieldChange: function (key, value) {
+        if (key !== 'category' || value !== 'تنظيف') return;
+        var amountEl = document.getElementById('mf_amount');
+        var descEl = document.getElementById('mf_desc');
+        if (amountEl && !amountEl.value) amountEl.value = state.settings.cleaningRate;
+        if (descEl && !descEl.value) descEl.value = 'تنظيف العمارة';
+      },
+      onSubmit: function (values, setError, close) {
+        var amount = parseFloat(values.amount);
+        if (!amount || amount <= 0) { setError('أدخل مبلغًا صحيحًا'); return; }
+        sb.rpc('admin_add_spending', { p_token: sessionToken, p_desc: values.desc || '', p_category: values.category || 'أخرى', p_amount: amount, p_for_month: currentAsOf + '-01' }).then(function (res) {
+          if (res.error) { setError(friendlyRpcError(res.error)); return; }
+          close();
+          refreshAndRender();
+        });
+      }
+    });
+  }
+
+  function syncNowFlow() {
+    setSyncStatus('pending', 'جارٍ المزامنة...');
+    refreshAndRender();
+  }
+
+  function settingsFlow() {
+    showModal({
+      title: 'إعدادات الصندوق',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'fee', label: 'الرسوم الشهرية الثابتة (أعلى) اعتبارًا من ' + monthLabel(currentAsOf), type: 'number', value: getFeeForMonth(3, currentAsOf) },
+        { key: 'groundFee', label: 'رسوم الأرضي عند عدم توفر بيانات فاتورة (احتياطي فقط)', type: 'number', value: feeFromHistory(state.settings.groundFeeHistory, currentAsOf) },
+        { key: 'cleaningRate', label: 'سعر التنظيف الافتراضي (عند اختيار "تنظيف" كتصنيف مصروف)', type: 'number', value: state.settings.cleaningRate },
+        { key: 'dueDay', label: 'يوم الاستحقاق الشهري', type: 'number', value: state.settings.dueDay },
+        { key: 'opening', label: 'الرصيد الافتتاحي', type: 'number', value: state.settings.openingBalance }
+      ],
+      onSubmit: function (values, setError, close) {
+        var calls = [];
+        var fee = parseFloat(values.fee);
+        if (fee && fee !== getFeeForMonth(3, currentAsOf)) {
+          calls.push(sb.rpc('admin_push_fee', { p_token: sessionToken, p_kind: 'upstairs_fixed', p_effective_month: currentAsOf + '-01', p_amount: fee }));
+        }
+        var groundFee = parseFloat(values.groundFee);
+        if (!isNaN(groundFee) && groundFee !== getFeeForMonth(1, currentAsOf)) {
+          calls.push(sb.rpc('admin_push_fee', { p_token: sessionToken, p_kind: 'ground_fallback', p_effective_month: currentAsOf + '-01', p_amount: groundFee }));
+        }
+        var cleaningRate = parseFloat(values.cleaningRate);
+        var dueDay = parseInt(values.dueDay, 10);
+        var opening = parseFloat(values.opening);
+        calls.push(sb.rpc('admin_set_settings', {
+          p_token: sessionToken,
+          p_opening: isNaN(opening) ? null : opening,
+          p_due_day: dueDay || null,
+          p_cleaning_rate: isNaN(cleaningRate) ? null : cleaningRate
+        }));
+        Promise.all(calls).then(function (results) {
+          var errRes = results.filter(function (r) { return r && r.error; })[0];
+          if (errRes) { setError(friendlyRpcError(errRes.error)); return; }
+          close();
+          refreshAndRender();
+        });
+      }
+    });
+  }
+
+  function quickTogglePaid(apt) {
+    var key = currentAsOf;
+    var name = getAptName(apt);
+    var existing = state.income.filter(function (e) { return e.apt === apt && e.forMonth === key; });
+    if (existing.length) {
+      showConfirm('إلغاء الدفعة', 'إلغاء تسجيل دفعة ' + name + ' لشهر ' + monthLabel(key) + '؟', function () {
+        sb.rpc('admin_toggle_paid', { p_token: sessionToken, p_apt: apt, p_month: key + '-01', p_amount: getFeeForMonth(apt, key) }).then(function () { refreshAndRender(); });
+      });
+      return;
+    }
+    var fee = getFeeForMonth(apt, key);
+    showConfirm('تسجيل دفعة', 'تسجيل دفعة ' + fmt(fee) + ' ريال لـ' + name + ' عن شهر ' + monthLabel(key) + '؟', function () {
+      sb.rpc('admin_toggle_paid', { p_token: sessionToken, p_apt: apt, p_month: key + '-01', p_amount: fee }).then(function () { refreshAndRender(); });
+    });
+  }
+
+  function onPillClick(apt) {
+    var fee = getFeeForMonth(apt, currentAsOf);
+    if (fee <= 0) { addPaymentFlow(apt); return; }
+    quickTogglePaid(apt);
+  }
+
+  var BILL_PHOTO_UPLOAD_URL = 'https://hltdvzyocdpxhwlofmwu.supabase.co/functions/v1/upload-bill-photo';
+
+  function fileToDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(reader.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function recordBillFlow(monthKeyArg) {
+    // Called either from this (treasury) tab's own state, or bridged from
+    // the bills tab's independent month-browsing -- monthKeyArg lets the
+    // caller be explicit about which month it means instead of assuming
+    // this tab's currentAsOf, since the two tabs can be browsing different
+    // months at the same time.
+    var key = monthKeyArg || currentAsOf;
+    var existing = (state.billHistory || {})[key] || {};
+    showModal({
+      title: 'تسجيل فاتورة ' + monthLabel(key),
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'water', label: 'فاتورة المياه (ريال)', type: 'number', value: existing.water || '' },
+        { key: 'elec', label: 'فاتورة الكهرباء (ريال)', type: 'number', value: existing.elec || '' },
+        { key: 'photo', label: 'صورة الفاتورة (اختياري)', type: 'file' }
+      ],
+      onSubmit: function (values, setError, close) {
+        var water = parseFloat(values.water) || 0;
+        var elec = parseFloat(values.elec) || 0;
+        sb.rpc('admin_record_bill', { p_token: sessionToken, p_month: key + '-01', p_water: water, p_elec: elec }).then(function (res) {
+          if (res.error) { setError(friendlyRpcError(res.error)); return; }
+          if (!values.photo) { close(); refreshAndRender(); return; }
+          // The water/electricity numbers above are already saved at this
+          // point (the RPC call just above succeeded) -- a failure from here
+          // on is only "the photo didn't attach", never data loss. Close the
+          // modal either way (re-opening it would lose the already-saved
+          // numbers from view), but surface a clear alert on failure instead
+          // of silently pretending the photo was saved when it wasn't.
+          fileToDataUrl(values.photo).then(function (dataUrl) {
+            return fetch(BILL_PHOTO_UPLOAD_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ token: sessionToken, month: key + '-01', dataUrl: dataUrl })
+            });
+          }).then(function (resp) {
+            close();
+            refreshAndRender();
+            if (!resp || !resp.ok) {
+              window.alert('تم حفظ الفاتورة، لكن تعذّر رفع الصورة. أعد المحاولة من "تسجيل الفاتورة" لنفس الشهر.');
+            }
+          }).catch(function () {
+            close();
+            refreshAndRender();
+            window.alert('تم حفظ الفاتورة، لكن تعذّر رفع الصورة. أعد المحاولة من "تسجيل الفاتورة" لنفس الشهر.');
+          });
+        });
+      }
+    });
+  }
+
+  function namesFlow() {
+    var apts = (state.settings.activeApartments || APARTMENTS);
+    showModal({
+      title: 'أسماء السكان',
+      submitLabel: 'حفظ',
+      fields: apts.map(function (apt) {
+        return { key: 'name' + apt, label: 'شقة ' + apt + (isGroundApt(apt) ? ' (أرضي)' : ' (علوي)'), type: 'text', value: (state.names && state.names[apt]) || '' };
+      }),
+      onSubmit: function (values, setError, close) {
+        var calls = [];
+        apts.forEach(function (apt) {
+          var v = (values['name' + apt] || '').trim();
+          var current = state.names[apt] || '';
+          if (v !== current) {
+            calls.push(sb.rpc('admin_set_apartment_name', { p_token: sessionToken, p_apt: apt, p_name: v }));
+          }
+        });
+        if (!calls.length) { close(); return; }
+        Promise.all(calls).then(function (results) {
+          var errRes = results.filter(function (r) { return r && r.error; })[0];
+          if (errRes) { setError(friendlyRpcError(errRes.error)); return; }
+          close();
+          refreshAndRender();
+        });
+      }
+    });
+  }
+
+  function openAdminMenu() {
+    var overlay = document.getElementById('modalOverlay');
+    var box = document.getElementById('modalBox');
+    if (!overlay || !box) return;
+    box.innerHTML = '<h3>إعدادات المشرف</h3>' +
+      '<div class="admin-menu">' +
+      '<button type="button" class="admin-menu-btn" id="adminMenuNames">أسماء السكان</button>' +
+      '<button type="button" class="admin-menu-btn" id="adminMenuFees">الرسوم والإعدادات</button>' +
+      '<button type="button" class="admin-menu-btn" id="adminMenuPin">تغيير رمز المشرف</button>' +
+      '</div>' +
+      '<div class="modal-actions"><button type="button" class="modal-cancel" id="modalCancelBtn">إغلاق</button></div>';
+    overlay.classList.remove('hidden-view');
+    document.getElementById('modalCancelBtn').addEventListener('click', closeModal);
+    document.getElementById('adminMenuNames').addEventListener('click', function () { namesFlow(); });
+    document.getElementById('adminMenuFees').addEventListener('click', function () { settingsFlow(); });
+    document.getElementById('adminMenuPin').addEventListener('click', function () { changePinFlow(); });
+  }
+
+  function changePinFlow() {
+    showModal({
+      title: 'تغيير رمز المشرف',
+      submitLabel: 'حفظ',
+      fields: [
+        { key: 'p1', label: 'الرمز الجديد (أرقام)', type: 'password' },
+        { key: 'p2', label: 'تأكيد الرمز الجديد', type: 'password' }
+      ],
+      onSubmit: function (values, setError, close) {
+        if (!values.p1) { setError('أدخل رمزًا'); return; }
+        if (values.p1 !== values.p2) { setError('الرمزان غير متطابقين'); return; }
+        sb.rpc('admin_set_pin', { p_token: sessionToken, new_pin: values.p1 }).then(function (res) {
+          if (res.error) { setError(friendlyRpcError(res.error)); return; }
+          close();
+        });
+      }
+    });
+  }
+
+  // ---- PIN lock ---------------------------------------------------
+  function updateLockIcon() {
+    var btn = document.getElementById('adminLockBtn');
+    if (btn) {
+      btn.textContent = unlocked ? '🔓' : '🔒';
+      btn.classList.toggle('unlocked', unlocked);
+    }
+    var settingsBtn = document.getElementById('adminSettingsBtn');
+    if (settingsBtn) settingsBtn.classList.toggle('hidden-view', !unlocked);
+    window.__fundUnlocked = unlocked;
+    if (window.__fundRecalcBills) window.__fundRecalcBills();
+  }
+
+  function tryUnlock() {
+    if (!initialLoadDone) return; // gate: never act before the first real fetch resolves
+    if (unlocked) {
+      unlocked = false; sessionToken = null;
+      try { sessionStorage.removeItem('adminSessionToken'); } catch (e) {}
+      updateLockIcon();
+      renderDashboard();
+      return;
+    }
+    if (!state.hasPin) {
+      showModal({
+        title: 'تعيين رمز المشرف',
+        submitLabel: 'تعيين ودخول',
+        fields: [
+          { key: 'p1', label: 'رمز جديد (أرقام)', type: 'password' },
+          { key: 'p2', label: 'تأكيد الرمز', type: 'password' }
+        ],
+        onSubmit: function (values, setError, close) {
+          if (!values.p1) { setError('أدخل رمزًا'); return; }
+          if (values.p1 !== values.p2) { setError('الرمزان غير متطابقين'); return; }
+          sb.rpc('admin_set_initial_pin', { new_pin: values.p1 }).then(function (res) {
+            if (res.error) { setError(friendlyRpcError(res.error)); return; }
+            sessionToken = res.data; unlocked = true;
+            try { sessionStorage.setItem('adminSessionToken', sessionToken); } catch (e) {}
+            close(); updateLockIcon();
+            refreshAndRender();
+          });
+        }
+      });
+    } else {
+      showModal({
+        title: 'دخول المشرف',
+        submitLabel: 'دخول',
+        fields: [{ key: 'pin', label: 'رمز المشرف', type: 'password' }],
+        onSubmit: function (values, setError, close) {
+          sb.rpc('admin_login', { pin: values.pin }).then(function (res) {
+            if (res.error) { setError(friendlyRpcError(res.error)); return; }
+            sessionToken = res.data; unlocked = true;
+            try { sessionStorage.setItem('adminSessionToken', sessionToken); } catch (e) {}
+            close(); updateLockIcon();
+            renderDashboard();
+          });
+        }
+      });
+    }
+  }
+
+  // ---- render -------------------------------------------------------
+  function renderDashboard() {
+    if (!state) {
+      var listEmpty = document.getElementById('payList');
+      if (listEmpty) listEmpty.innerHTML = '<div class="exp-empty">جارٍ التحميل...</div>';
+      return;
+    }
+    var labelEl = document.getElementById('dashMonthLabel');
+    if (labelEl) labelEl.textContent = monthLabel(currentAsOf);
+    var nextBtnEl = document.getElementById('monthNextBtn');
+    if (nextBtnEl) {
+      var atLatest = currentAsOf >= todayKey();
+      nextBtnEl.disabled = atLatest;
+      nextBtnEl.style.opacity = atLatest ? '0.35' : '1';
+      nextBtnEl.style.cursor = atLatest ? 'default' : 'pointer';
+    }
+    var asOfEl = document.getElementById('dashAsOf');
+    if (asOfEl) asOfEl.textContent = 'بيانات محسوبة حتى ' + monthLabel(currentAsOf);
+    // g stays scoped to the browsed month (currentAsOf) -- it drives statusThisMonth
+    // for the per-apartment pills below, which should reflect whichever month is
+    // being scrolled to.
+    var g = computeGlobal(currentAsOf);
+
+    // The top KPI tiles are pinned to the REAL current month regardless of which
+    // month is being browsed via the ‹ › nav -- balance/target-balance/outstanding
+    // are "where do we actually stand today" figures and shouldn't change just
+    // because someone scrolled back to look at March.
+    var today = todayKey();
+    var overall = computeGlobal(today);
+    var thisMonthOnly = computeGlobal(today, today);
+    var ytd = computeGlobal(today, (state.settings.startMonth > yearStartKey(today) ? state.settings.startMonth : yearStartKey(today)));
+
+    var balEl = document.getElementById('fundBalance');
+    if (balEl) balEl.textContent = fmtR(overall.balance);
+    var expEl = document.getElementById('fundExpected');
+    if (expEl) expEl.textContent = fmtR(overall.balance + overall.outstanding);
+    var rateEl = document.getElementById('fundRate');
+    if (rateEl) {
+      rateEl.textContent = thisMonthOnly.rate + '%';
+      rateEl.className = 'dstat-val' + (thisMonthOnly.rate >= 100 ? ' good' : (thisMonthOnly.rate < 80 ? ' bad' : ''));
+    }
+    var outEl = document.getElementById('fundOutstanding');
+    if (outEl) outEl.textContent = fmtR(overall.outstanding);
+    var statsSubEl = document.getElementById('dashStatsSub');
+    if (statsSubEl) {
+      statsSubEl.textContent = 'معدل التحصيل: منذ بداية العام ' + ytd.rate + '% · منذ تأسيس الصندوق ' + overall.rate + '%';
+    }
+    var billInfoEl = document.getElementById('monthBillInfo');
+    if (billInfoEl) {
+      var b = (state.billHistory || {})[currentAsOf];
+      var infoText = b
+        ? ('فاتورة ' + monthLabel(currentAsOf) + ': مياه ' + fmt(b.water) + ' + كهرباء ' + fmt(b.elec) + ' = ' + fmtR((parseFloat(b.water) || 0) + (parseFloat(b.elec) || 0)))
+        : ('لم تُسجَّل فاتورة ' + monthLabel(currentAsOf) + ' بعد');
+      billInfoEl.innerHTML = '';
+      billInfoEl.appendChild(document.createTextNode(infoText));
+      if (b && b.photoUrl) {
+        var link = document.createElement('a');
+        link.href = b.photoUrl;
+        link.target = '_blank';
+        link.rel = 'noopener';
+        link.className = 'bill-photo-link';
+        link.textContent = ' 📎 عرض صورة الفاتورة الأصلية';
+        billInfoEl.appendChild(link);
+      } else if (unlocked && b) {
+        var noPhoto = document.createElement('span');
+        noPhoto.className = 'bill-photo-missing';
+        noPhoto.textContent = ' — لا توجد صورة مرفقة لهذا الشهر (أضِفها من "تسجيل الفاتورة")';
+        billInfoEl.appendChild(noPhoto);
+      }
+    }
+
+    var list = document.getElementById('payList');
+    if (list) {
+      list.innerHTML = '';
+      state.settings.activeApartments.forEach(function (apt) {
+        var s = g.perApt[apt];
+        var name = getAptName(apt);
+        var noFee = getFeeForMonth(apt, currentAsOf) <= 0;
+        var pillClass, pillText, subText;
+        if (noFee) {
+          if (isGroundApt(apt)) {
+            pillClass = 'notdue'; pillText = 'لا توجد بيانات فاتورة'; subText = 'أدخل فاتورة الشهر في تبويب الفواتير';
+          } else {
+            pillClass = 'notdue'; pillText = 'بدون رسوم ثابتة'; subText = 'يُسجَّل عند الحاجة';
+          }
+        } else if (s.statusThisMonth === 'paid') {
+          pillClass = 'paid'; pillText = 'مدفوع'; subText = s.remaining > 0 ? ('متبقي ' + fmt(s.remaining)) : 'مكتمل';
+        } else if (s.statusThisMonth === 'notdue') {
+          pillClass = 'notdue'; pillText = 'لم يحن'; subText = s.remaining > 0 ? ('متبقي ' + fmt(s.remaining)) : ('يستحق يوم ' + (state.settings.dueDay || 28));
+        } else if (s.statusThisMonth === 'partial') {
+          pillClass = 'unpaid'; pillText = 'جزئي'; subText = 'متبقي ' + fmt(s.remaining);
+        } else {
+          pillClass = 'unpaid'; pillText = 'متأخر'; subText = 'متبقي ' + fmt(s.remaining);
+        }
+        var row = document.createElement('div');
+        row.className = 'pay-row';
+        row.innerHTML =
+          '<span class="pr-name"><span class="apt-badge ' + (isGroundApt(apt) ? 'ground' : 'up') + '">' + apt + '</span>' + name + '</span>' +
+          '<span class="pr-sub">' + subText + '</span>' +
+          '<button type="button" class="pay-pill ' + pillClass + (unlocked ? ' editable' : '') + '" data-apt="' + apt + '">' + pillText + '</button>';
+        list.appendChild(row);
+      });
+      if (unlocked) {
+        Array.prototype.forEach.call(list.querySelectorAll('.pay-pill'), function (btn) {
+          btn.addEventListener('click', function () {
+            onPillClick(parseInt(btn.getAttribute('data-apt'), 10));
+          });
+        });
+      }
+    }
+
+    var actions = document.getElementById('dashActions');
+    if (actions) {
+      actions.innerHTML = '';
+      if (unlocked) {
+        [['+ دفعة', function () { addPaymentFlow(); }], ['+ مصروف', function () { addSpendingFlow(); }], ['مزامنة الآن 🔄', syncNowFlow]].forEach(function (pair) {
+          var b = document.createElement('button');
+          b.type = 'button'; b.textContent = pair[0];
+          b.addEventListener('click', pair[1]);
+          actions.appendChild(b);
+        });
+      }
+    }
+
+    renderLedgers();
+  }
+
+  function deleteRecord(kind, id) {
+    showConfirm('حذف السجل', 'هل تريد حذف هذا السجل نهائيًا؟ لا يمكن التراجع بعد الحذف.', function () {
+      var rpc = kind === 'income' ? 'admin_delete_income' : 'admin_delete_spending';
+      sb.rpc(rpc, { p_token: sessionToken, p_id: id }).then(function () { refreshAndRender(); });
+    });
+  }
+
+  function wireDeleteButtons(container) {
+    Array.prototype.forEach.call(container.querySelectorAll('.exp-del'), function (btn) {
+      btn.addEventListener('click', function () {
+        deleteRecord(btn.getAttribute('data-kind'), btn.getAttribute('data-id'));
+      });
+    });
+  }
+
+  function renderLedgers() {
+    var incLog = document.getElementById('incomeLog');
+    if (incLog) {
+      var items = state.income.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 30);
+      incLog.innerHTML = items.length ? items.map(function (e) {
+        var name = getAptName(e.apt);
+        var delBtn = unlocked ? '<button type="button" class="exp-del" data-kind="income" data-id="' + e.id + '" title="حذف">✕</button>' : '';
+        return '<div class="exp-row"><span class="exp-desc">' + e.date + ' — ' + name + ' (' + monthLabel(e.forMonth) + ')</span><span class="exp-amt pos">+' + fmt(e.amount) + '</span>' + delBtn + '</div>';
+      }).join('') : '<div class="exp-empty">لا توجد مدفوعات مسجّلة بعد</div>';
+      if (unlocked) wireDeleteButtons(incLog);
+    }
+    var spLog = document.getElementById('spendLog');
+    if (spLog) {
+      var sitems = state.spendings.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; }).slice(0, 30);
+      spLog.innerHTML = sitems.length ? sitems.map(function (e) {
+        var delBtn = unlocked ? '<button type="button" class="exp-del" data-kind="spend" data-id="' + e.id + '" title="حذف">✕</button>' : '';
+        return '<div class="exp-row"><span class="exp-desc">' + e.date + ' — ' + e.desc + ' (' + e.category + ')</span><span class="exp-amt neg">-' + fmt(e.amount) + '</span>' + delBtn + '</div>';
+      }).join('') : '<div class="exp-empty">لا توجد مصاريف مسجّلة بعد</div>';
+      if (unlocked) wireDeleteButtons(spLog);
+    }
+  }
+
+  // ---- wiring -------------------------------------------------------
+  var tabBills = document.getElementById('tabBillsBtn');
+  var tabDash = document.getElementById('tabDashBtn');
+  var billsView = document.getElementById('billsView');
+  var dashView = document.getElementById('dashboardView');
+  var pageEl = document.querySelector('.page');
+
+  // The page title/description in the common header used to be static text
+  // ("قسمة فواتير المبنى" + its own paragraph) left over from before the two
+  // tabs shared one header -- so switching to صندوق العمارة still showed the
+  // bills-tab title. Each tab now sets its own title/description when it
+  // becomes active.
+  var headerH1 = document.querySelector('.top-row h1');
+  var headerSub = document.querySelector('header.top .sub');
+  var TAB_HEADERS = {
+    bills: { title: 'قسمة فواتير المبنى', sub: 'نصيب كل شقة من فاتورتَي المياه والكهرباء المسجَّلتين لهذا الشهر — جدول جاهز للمشاركة.' },
+    dash: { title: 'صندوق العمارة', sub: 'رصيد الصندوق، سجل المدفوعات والمصاريف، وحالة كل شقة شهريًا.' }
+  };
+  function updateHeaderForTab(key) {
+    var h = TAB_HEADERS[key];
+    if (!h) return;
+    if (headerH1) headerH1.textContent = h.title;
+    if (headerSub) headerSub.textContent = h.sub;
+  }
+
+  if (tabBills && tabDash && billsView && dashView) {
+    tabBills.addEventListener('click', function () {
+      tabBills.classList.add('active'); tabDash.classList.remove('active');
+      billsView.classList.remove('hidden-view'); dashView.classList.add('hidden-view');
+      if (pageEl) pageEl.classList.remove('dash-mode');
+      updateHeaderForTab('bills');
+    });
+    tabDash.addEventListener('click', function () {
+      tabDash.classList.add('active'); tabBills.classList.remove('active');
+      dashView.classList.remove('hidden-view'); billsView.classList.add('hidden-view');
+      if (pageEl) pageEl.classList.add('dash-mode');
+      updateHeaderForTab('dash');
+      renderDashboard();
+    });
+  }
+
+  var lockBtn = document.getElementById('adminLockBtn');
+  if (lockBtn) lockBtn.addEventListener('click', tryUnlock);
+  var settingsMenuBtn = document.getElementById('adminSettingsBtn');
+  if (settingsMenuBtn) settingsMenuBtn.addEventListener('click', function () { if (unlocked) openAdminMenu(); });
+
+  var prevBtn = document.getElementById('monthPrevBtn');
+  var nextBtn = document.getElementById('monthNextBtn');
+  if (prevBtn) prevBtn.addEventListener('click', function () { currentAsOf = addMonths(currentAsOf, -1); renderDashboard(); });
+  if (nextBtn) nextBtn.addEventListener('click', function () {
+    var next = addMonths(currentAsOf, 1);
+    if (next > todayKey()) return; // no data exists yet for unpublished future months
+    currentAsOf = next; renderDashboard();
+  });
+
+  var ledgerIncomeTabBtn = document.getElementById('ledgerIncomeTabBtn');
+  var ledgerSpendTabBtn = document.getElementById('ledgerSpendTabBtn');
+  var incomeLogEl = document.getElementById('incomeLog');
+  var spendLogEl = document.getElementById('spendLog');
+  if (ledgerIncomeTabBtn && ledgerSpendTabBtn && incomeLogEl && spendLogEl) {
+    ledgerIncomeTabBtn.addEventListener('click', function () {
+      ledgerIncomeTabBtn.classList.add('active'); ledgerSpendTabBtn.classList.remove('active');
+      incomeLogEl.classList.remove('hidden-view'); spendLogEl.classList.add('hidden-view');
+    });
+    ledgerSpendTabBtn.addEventListener('click', function () {
+      ledgerSpendTabBtn.classList.add('active'); ledgerIncomeTabBtn.classList.remove('active');
+      spendLogEl.classList.remove('hidden-view'); incomeLogEl.classList.add('hidden-view');
+    });
+  }
+
+  var modalOverlay = document.getElementById('modalOverlay');
+  if (modalOverlay) {
+    modalOverlay.addEventListener('click', function (ev) {
+      if (ev.target === modalOverlay) closeModal();
+    });
+  }
+
+  updateLockIcon();
+  window.__fundRecordBillFlow = recordBillFlow;
+
+  // ---- initial load + polling -----------------------------------------
+  // Paint instantly from this device's last-known cache (if any) so the
+  // page isn't blank while the first live fetch is in flight, but the
+  // cached copy is never treated as fresh: admin controls are gated on
+  // `initialLoadDone`, which is only set once loadFromSupabase() actually
+  // succeeds -- this is the direct fix for the race that let the app act
+  // on stale/default data before a real check had completed.
+  var cached = loadLocalState();
+  if (cached) { state = cached; window.__fundNames = cached.names; window.__fundBillHistory = cached.billHistory; renderDashboard(); }
+  setSyncStatus('pending', 'جارٍ التحميل...');
+  refreshAndRender();
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) refreshAndRender();
+  });
+  setInterval(function () {
+    if (!document.hidden) refreshAndRender();
+  }, 90000);
+})();
+
+</script>
+</body>
+</html>
